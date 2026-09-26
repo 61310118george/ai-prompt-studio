@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "mode": "browser mock",
+  "workflow": "save v1, analyze, apply candidate to draft, save v2, search, reload persistence",
+  "viewports": [
+    1440,
+    390
+  ],
+  "errors": []
+}

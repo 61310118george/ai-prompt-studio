@@ -1,0 +1,26 @@
+# macOS / editor metadata
+.DS_Store
+**/.DS_Store
+~$*
+
+# Python caches and local environments
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.pyinstaller-cache/
+
+# Local runtime data and secrets
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.db
+
+# Rebuildable working directories
+build/
+dist/
+tmp/
+
+# The distributable macOS app is committed as deliverables/AI Prompt Studio Next.zip

@@ -1,0 +1,36 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>研究與展示指南.md</title><style>
+body{margin:0;background:#f1eee8;color:#222;font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC',sans-serif;line-height:1.8}
+main{max-width:900px;margin:36px auto;background:white;padding:52px 64px;box-shadow:0 12px 50px #0001}
+h1,h2,h3{color:#111;line-height:1.4;break-after:avoid}h1{font-size:29px;border-bottom:2px solid #333;padding-bottom:20px}h2{font-size:23px;margin-top:40px}h3{font-size:18px;margin-top:26px}
+p,li{font-size:15px}table{border-collapse:collapse;width:100%;font-size:13px;margin:18px 0 24px}th,td{border:1px solid #d9d9d9;padding:10px 12px;text-align:left;vertical-align:top}th{background:#edf1f5}tr{break-inside:avoid}thead{display:table-header-group}
+a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;padding:2px 4px;overflow-wrap:anywhere}pre{white-space:pre-wrap}nav{font-size:14px;padding-bottom:16px;border-bottom:1px solid #ddd}
+@media(max-width:760px){main{margin:0;padding:25px 20px}table{font-size:12px}th,td{padding:6px}}
+@media print{@page{size:A4;margin:18mm}body{background:white}main{max-width:none;margin:0;padding:0;box-shadow:none}nav{display:none}h1{font-size:24px}h2{font-size:19px}p,li{font-size:11pt}table{font-size:9.5pt}a{color:#111;text-decoration:none}}
+</style><main><nav><a href="專題企劃書.html">專題企劃書</a> · <a href="軟體規格書.html">軟體規格書</a> · <a href="現況符合度.html">現況符合度</a> · <a href="研究與展示指南.html">研究與展示指南</a> · 可使用瀏覽器列印</nav><h1 id="_1">研究與展示指南</h1>
+<h2 id="demo">五分鐘 Demo 腳本</h2>
+<ol>
+<li>介紹問題（30 秒）：提示詞找不到、版本混亂、每次 API 輸入看不見成本。</li>
+<li>選擇專案（30 秒）：開啟測試資料夾，查看一般 Markdown 與 Agent 檔案分類。</li>
+<li>模板編寫與管理（60 秒）：建立「程式審查」提示詞，填任務、限制、格式，保存 v1，加上分類及標籤；搜尋找回。</li>
+<li>Token 分析（90 秒）：加入重複條列／空行，選 tokenizer，填假設單價與 1,000 次呼叫。展示原文／候選、Diff、Token 與費用範圍。說明這是未快取純文字情境，不是帳單。</li>
+<li>保存及復原（60 秒）：帶回候選、保存 v2，查看 v1；匯出至新 Markdown，展示檔案與復原。</li>
+<li>研究限制（30 秒）：展示無可精簡案例，明確說尚未用 Token 改善推論品質提升；介紹正式對照研究設計。</li>
+</ol>
+<h2 id="_2">試測資料欄位</h2>
+<p>PromptCase：case_id、任務分類、語言、來源與授權、原文、候選、必要事實清單、格式要求、tokenizer、原文 Token、候選 Token、規則及修改原因。</p>
+<p>QualityTrial：case_id、版本 A/B、模型與版本、參數、重複編號、輸出、任務成功、必要資訊保留、格式正確、限制違反、評分者編號、備註。未執行時保持空白，不填預期結論。</p>
+<p>UsabilityTrial：受試者代號、任務編號、工具順序、開始／结束時間、是否成功、錯誤版本次數、主觀容易程度（1–5）、困難與建議。保存同意方式與匿名化資料，不收集不必要個資。</p>
+<h2 id="_3">評分準則示例</h2>
+<p>任務成功：是否完成預先指定工作，0／1。事實保留：必要事實保留數÷清單總數。格式正確：是否可由要求的 parser 解析或符合明確表格欄位，0／1。重大限制違反：是否違反「不得改 API」「不得捏造來源」等關鍵要求，0／1。</p>
+<p>不得用自訂「提示詞品質 90 分」替代上述可檢查結果。若兩位評分者結果不一致，保留各自記錄，討論後另記共識，不覆蓋原始分數。</p>
+<h2 id="_4">完成畢專的交付清單</h2>
+<ul>
+<li>可執行 App、原始碼與安裝／回退說明。</li>
+<li>老師確認後的企劃書、軟體規格與需求追蹤。</li>
+<li>版本固定的測試環境、功能測試結果、可重現 Token 基準。</li>
+<li>至少 30 則真實語料的分析（建議規模，依老師調整）。</li>
+<li>真人試測與模型品質比較，或經老師同意明確縮限研究題目。</li>
+<li>最終報告：研究問題、方法、結果、討論、限制與未來工作。</li>
+<li>五分鐘 Demo、簡報、展示影片及問題排除筆記。</li>
+</ul>
+<p>本次可完成的是軟體、規格與研究執行材料；真人參與、學校核准與未來实验必須由實際執行產生證據。取得資料後，分析可在本機完成，無需再把敏感提示詞交給外部服務。</p></main></html>

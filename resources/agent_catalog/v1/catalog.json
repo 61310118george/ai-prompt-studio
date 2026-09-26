@@ -1,0 +1,90 @@
+{
+  "catalog_version": "1.0.0",
+  "verified_at": "2026-07-19",
+  "description": "AI Memory Manager 2.0 離線 Agent 記憶規格目錄",
+  "agents": [
+    {
+      "id": "codex",
+      "name": "Codex",
+      "summary": "以 AGENTS.md 提供持久的儲存庫指引；Codex Memories 是獨立機制。",
+      "load_behavior": "由專案根目錄往目前工作目錄載入，每層最多一個指令檔，較接近目前目錄的內容優先。",
+      "sources": [
+        {"title": "Codex customization", "url": "https://learn.chatgpt.com/docs/customization/overview"},
+        {"title": "Custom instructions with AGENTS.md", "url": "https://learn.chatgpt.com/docs/agent-configuration/agents-md"},
+        {"title": "OpenAI Codex AGENTS.md example", "url": "https://github.com/openai/codex/blob/main/AGENTS.md"}
+      ],
+      "files": [
+        {"id": "codex_agents", "label": "AGENTS.md", "path": "AGENTS.md", "patterns": ["AGENTS.md"], "purpose": "專案或目錄的持久協作規則", "modules": ["project_overview", "architecture", "commands", "conventions", "collaboration", "boundaries", "verification"]},
+        {"id": "codex_override", "label": "AGENTS.override.md", "path": "AGENTS.override.md", "patterns": ["AGENTS.override.md"], "purpose": "同一目錄下暫時取代 AGENTS.md 的規則", "modules": ["collaboration", "boundaries", "verification"]}
+      ]
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "summary": "CLAUDE.md 保存使用者撰寫的持久指令；Auto Memory 位於使用者主目錄中的專案記憶資料夾。",
+      "load_behavior": "載入全域、專案與目錄層級 CLAUDE.md；.claude/rules 可依路徑套用。",
+      "external_memory_note": "Auto Memory 的 MEMORY.md 位於 ~/.claude/projects/<project>/memory/，不屬於專案內可攜式檔案，本 App 第一版只提示、不跨越專案根目錄寫入。",
+      "sources": [
+        {"title": "How Claude remembers your project", "url": "https://code.claude.com/docs/en/memory"}
+      ],
+      "files": [
+        {"id": "claude_instructions", "label": "CLAUDE.md", "path": "CLAUDE.md", "patterns": ["CLAUDE.md", "CLAUDE.local.md"], "purpose": "Claude Code 專案指令與架構脈絡", "modules": ["project_overview", "architecture", "commands", "conventions", "collaboration", "boundaries", "verification"]},
+        {"id": "claude_rule", "label": ".claude/rules/project.md", "path": ".claude/rules/project.md", "patterns": [".claude/rules/*.md"], "purpose": "模組化或路徑限定規則", "modules": ["conventions", "boundaries", "verification"]}
+      ]
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "summary": "GEMINI.md 是階層式 instructional context，可透過 @path 匯入其他 Markdown。",
+      "load_behavior": "合併全域、專案祖先與子目錄 GEMINI.md；可用 /memory show 檢查實際內容。",
+      "sources": [
+        {"title": "Provide Context with GEMINI.md Files", "url": "https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html"},
+        {"title": "Gemini CLI GEMINI.md example", "url": "https://github.com/google-gemini/gemini-cli/blob/main/GEMINI.md"}
+      ],
+      "files": [
+        {"id": "gemini_context", "label": "GEMINI.md", "path": "GEMINI.md", "patterns": ["GEMINI.md"], "purpose": "Gemini CLI 專案指令與階層式記憶", "modules": ["project_overview", "architecture", "commands", "conventions", "collaboration", "boundaries", "verification"]}
+      ]
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw（龍蝦）",
+      "summary": "以多個 Markdown bootstrap 檔分離操作規則、人格、使用者、工具與長期記憶。",
+      "load_behavior": "工作區根目錄的 bootstrap 檔在工作階段開始時注入；MEMORY.md 保存精簡長期記憶，daily notes 保存工作層資訊。",
+      "sources": [
+        {"title": "Agent workspace", "url": "https://docs.openclaw.ai/concepts/agent-workspace"},
+        {"title": "Memory overview", "url": "https://docs.openclaw.ai/concepts/memory"}
+      ],
+      "files": [
+        {"id": "openclaw_agents", "label": "AGENTS.md", "path": "AGENTS.md", "patterns": ["AGENTS.md"], "purpose": "Agent 操作方式與記憶使用規則", "modules": ["collaboration", "boundaries", "verification", "long_term_policy"]},
+        {"id": "openclaw_memory", "label": "MEMORY.md", "path": "MEMORY.md", "patterns": ["MEMORY.md"], "purpose": "精簡、可長期保存的事實、偏好與決策", "modules": ["long_term_memory", "decisions_risks"]},
+        {"id": "openclaw_soul", "label": "SOUL.md", "path": "SOUL.md", "patterns": ["SOUL.md"], "purpose": "人格、語氣與邊界", "modules": ["persona"]},
+        {"id": "openclaw_user", "label": "USER.md", "path": "USER.md", "patterns": ["USER.md"], "purpose": "使用者背景與稱呼偏好", "modules": ["user_profile"]},
+        {"id": "openclaw_identity", "label": "IDENTITY.md", "path": "IDENTITY.md", "patterns": ["IDENTITY.md"], "purpose": "Agent 名稱、定位與識別", "modules": ["identity"]},
+        {"id": "openclaw_tools", "label": "TOOLS.md", "path": "TOOLS.md", "patterns": ["TOOLS.md"], "purpose": "本機工具與使用慣例", "modules": ["tools"]},
+        {"id": "openclaw_heartbeat", "label": "HEARTBEAT.md", "path": "HEARTBEAT.md", "patterns": ["HEARTBEAT.md"], "purpose": "定期 heartbeat 的精簡檢查清單", "modules": ["heartbeat"]}
+      ]
+    }
+  ],
+  "future_compatibility": [
+    {"id": "github_copilot", "name": "GitHub Copilot", "files": [".github/copilot-instructions.md", ".github/instructions/*.instructions.md", "AGENTS.md"], "source": "https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide"},
+    {"id": "cursor", "name": "Cursor", "files": [".cursor/rules/*"], "source": "https://docs.cursor.com/context/rules"},
+    {"id": "windsurf", "name": "Windsurf", "files": [".windsurf/rules/*.md", "AGENTS.md"], "source": "https://docs.windsurf.com/zh/windsurf/cascade/memories"}
+  ],
+  "modules": [
+    {"id": "project_overview", "title": "專案目標與用途", "description": "讓 Agent 快速理解專案為何存在與成功標準。", "fields": [{"id": "purpose", "label": "專案用途", "type": "textarea", "required": true}, {"id": "goals", "label": "核心目標", "type": "list", "required": true}, {"id": "non_goals", "label": "不做事項", "type": "list"}]},
+    {"id": "architecture", "title": "技術架構與目錄地圖", "description": "記錄技術棧、主要元件與重要路徑。", "fields": [{"id": "stack", "label": "技術棧", "type": "list"}, {"id": "components", "label": "主要元件", "type": "list", "required": true}, {"id": "paths", "label": "重要路徑", "type": "list"}]},
+    {"id": "commands", "title": "安裝、執行與驗證指令", "description": "提供可直接執行的專案命令。", "fields": [{"id": "setup", "label": "安裝／設定", "type": "code"}, {"id": "run", "label": "啟動", "type": "code"}, {"id": "test", "label": "測試", "type": "code", "required": true}, {"id": "build", "label": "打包／建置", "type": "code"}]},
+    {"id": "conventions", "title": "程式與文件規範", "description": "保存需要一致遵守的撰寫規則。", "fields": [{"id": "code", "label": "程式規範", "type": "list"}, {"id": "docs", "label": "文件規範", "type": "list"}, {"id": "language", "label": "語言與格式", "type": "text"}]},
+    {"id": "collaboration", "title": "AI 協作方式", "description": "定義使用者與 Agent 的分工及回覆方式。", "fields": [{"id": "agent_role", "label": "Agent 負責內容", "type": "textarea", "required": true}, {"id": "user_role", "label": "使用者負責內容", "type": "textarea"}, {"id": "response", "label": "回覆與交付格式", "type": "list"}]},
+    {"id": "boundaries", "title": "修改範圍與禁止事項", "description": "避免越權、擴大範圍或破壞資料。", "fields": [{"id": "allowed", "label": "允許範圍", "type": "list"}, {"id": "forbidden", "label": "禁止事項", "type": "list", "required": true}, {"id": "approval", "label": "需要先確認的操作", "type": "list"}]},
+    {"id": "verification", "title": "驗證方式與完成標準", "description": "說明工作完成前必須通過的檢查。", "fields": [{"id": "checks", "label": "檢查方式", "type": "list", "required": true}, {"id": "definition", "label": "完成標準", "type": "list"}]},
+    {"id": "decisions_risks", "title": "決策、風險與已知問題", "description": "保存仍會影響未來工作的穩定資訊。", "fields": [{"id": "decisions", "label": "重要決策", "type": "list"}, {"id": "risks", "label": "風險", "type": "list"}, {"id": "issues", "label": "已知問題", "type": "list"}]},
+    {"id": "long_term_policy", "title": "記憶維護方式", "description": "定義哪些資訊應寫入長期記憶或 daily notes。", "fields": [{"id": "durable", "label": "寫入長期記憶", "type": "list", "required": true}, {"id": "daily", "label": "寫入 daily notes", "type": "list"}, {"id": "cleanup", "label": "整理與淘汰規則", "type": "list"}]},
+    {"id": "long_term_memory", "title": "長期事實、偏好與決策", "description": "只保存跨工作階段仍有用的精簡資訊。", "fields": [{"id": "facts", "label": "穩定事實", "type": "list"}, {"id": "preferences", "label": "偏好", "type": "list"}, {"id": "decisions", "label": "長期決策", "type": "list"}]},
+    {"id": "persona", "title": "人格、語氣與邊界", "description": "定義 Agent 的表達方式與價值界線。", "fields": [{"id": "persona", "label": "人格定位", "type": "textarea", "required": true}, {"id": "tone", "label": "語氣", "type": "list"}, {"id": "boundaries", "label": "人格邊界", "type": "list"}]},
+    {"id": "user_profile", "title": "使用者背景與偏好", "description": "讓 Agent 知道服務對象及互動方式。", "fields": [{"id": "profile", "label": "使用者背景", "type": "textarea", "required": true}, {"id": "address", "label": "稱呼方式", "type": "text"}, {"id": "preferences", "label": "互動偏好", "type": "list"}]},
+    {"id": "identity", "title": "Agent 身分", "description": "定義名稱、定位與簡短識別。", "fields": [{"id": "name", "label": "名稱", "type": "text", "required": true}, {"id": "role", "label": "角色定位", "type": "textarea", "required": true}, {"id": "vibe", "label": "風格描述", "type": "text"}]},
+    {"id": "tools", "title": "工具與本機慣例", "description": "記錄工具用法，不改變實際工具權限。", "fields": [{"id": "available", "label": "常用工具", "type": "list"}, {"id": "conventions", "label": "使用慣例", "type": "list", "required": true}, {"id": "limitations", "label": "限制", "type": "list"}]},
+    {"id": "heartbeat", "title": "Heartbeat 檢查清單", "description": "保持短小，只放定期執行需要的項目。", "fields": [{"id": "checks", "label": "定期檢查", "type": "list", "required": true}, {"id": "notify", "label": "需要通知的條件", "type": "list"}]}
+  ]
+}

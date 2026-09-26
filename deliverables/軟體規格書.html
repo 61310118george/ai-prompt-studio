@@ -1,0 +1,365 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SPEC.md</title><style>
+body{margin:0;background:#f1eee8;color:#222;font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC',sans-serif;line-height:1.8}
+main{max-width:900px;margin:36px auto;background:white;padding:52px 64px;box-shadow:0 12px 50px #0001}
+h1,h2,h3{color:#111;line-height:1.4;break-after:avoid}h1{font-size:29px;border-bottom:2px solid #333;padding-bottom:20px}h2{font-size:23px;margin-top:40px}h3{font-size:18px;margin-top:26px}
+p,li{font-size:15px}table{border-collapse:collapse;width:100%;font-size:13px;margin:18px 0 24px}th,td{border:1px solid #d9d9d9;padding:10px 12px;text-align:left;vertical-align:top}th{background:#edf1f5}tr{break-inside:avoid}thead{display:table-header-group}
+a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;padding:2px 4px;overflow-wrap:anywhere}pre{white-space:pre-wrap}nav{font-size:14px;padding-bottom:16px;border-bottom:1px solid #ddd}
+@media(max-width:760px){main{margin:0;padding:25px 20px}table{font-size:12px}th,td{padding:6px}}
+@media print{@page{size:A4;margin:18mm}body{background:white}main{max-width:none;margin:0;padding:0;box-shadow:none}nav{display:none}h1{font-size:24px}h2{font-size:19px}p,li{font-size:11pt}table{font-size:9.5pt}a{color:#111;text-decoration:none}}
+</style><main><nav><a href="專題企劃書.html">專題企劃書</a> · <a href="軟體規格書.html">軟體規格書</a> · <a href="現況符合度.html">現況符合度</a> · <a href="研究與展示指南.html">研究與展示指南</a> · 可使用瀏覽器列印</nav><h1 id="ai-prompt-studio">AI Prompt Studio：軟體需求與技術規格</h1>
+<p>版本：1.1｜同步日期：2026-09-26｜狀態：本機單人 MVP 桌面交付基準</p>
+<p>交付形式：<code>dist/AI Prompt Studio Next.app</code>。桌面版直接內嵌最終 <code>web-preview/</code>，不是另外重寫或只開外部網站；五個功能區（提示詞、專案、記憶編程、記憶健檢、設定）共用同一份前端。瀏覽器使用示範資料，App 使用 Python bridge、SQLite 與真實本機檔案。桌面包內附兩種 tokenizer 資料，核心執行不需要網路。</p>
+<p>本文件定義新主題「AI 提示詞視覺化管理 App」的工程範圍。未列為已實作的研究或擴充功能，不得出現在成果中當作已完成能力。企劃書說明為何做，本文件說明系統必須如何運作與如何驗收。</p>
+<h2 id="1">1. 產品邊界與名詞</h2>
+<p>提示詞：使用者準備提供给 AI 的純文字內容，可包含任務、背景、限制、格式與程式碼。Agent 記憶檔：由特定工具依規則讀取的持久指令檔。資料庫版本：每次儲存的完整提示詞快照。檔案備份：對已存在 Markdown 寫回前保留的原始檔案。</p>
+<p>精確純文字 Token 計數：在指定 encoding 與本機版本下編碼的整數長度；不等同供應商完整 request usage。粗估：無特定模型保證的啟發式數字。情境成本：以使用者單價推算的未快取純文字輸入費用。</p>
+<p>第一版使用者為單人 macOS 使用者；瀏覽器提供共用 UI 的示範環境。核心不需 API Key、雲端帳號或模型推論。新版顯示名稱為 AI Prompt Studio，Python 套件名稱暫保留 ai_memory_app 以降低遷移風險。</p>
+<h2 id="2">2. 功能需求與優先級</h2>
+<p>P0 為必要交付；P1 為保留的輔助能力；P2 為後續候選，不影響本期完成判定。</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>優先</th>
+<th>需求</th>
+<th>驗收要點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-01</td>
+<td>P0</td>
+<td>選擇根目錄、開啟根目錄或子專案</td>
+<td>空資料夾也能成為專案</td>
+</tr>
+<tr>
+<td>FR-02</td>
+<td>P0</td>
+<td>掃描與預覽 Markdown</td>
+<td>一般 .md 可看，不誤認為所有 Agent 自動記憶</td>
+</tr>
+<tr>
+<td>FR-03</td>
+<td>P0</td>
+<td>建立與編輯專案提示詞</td>
+<td>標題與內容必填，跨專案不可覆寫</td>
+</tr>
+<tr>
+<td>FR-04</td>
+<td>P0</td>
+<td>搜尋、分類與標籤</td>
+<td>搜尋包含標題、內容、分類、標籤，大小寫不敏感</td>
+</tr>
+<tr>
+<td>FR-05</td>
+<td>P0</td>
+<td>引導式模板</td>
+<td>角色、任務、背景、限制、格式；任務為必要輸入</td>
+</tr>
+<tr>
+<td>FR-06</td>
+<td>P0</td>
+<td>保存版本與帶回歷史</td>
+<td>新儲存產生版本，不刪歷史；陳舊版本被拒絕</td>
+</tr>
+<tr>
+<td>FR-07</td>
+<td>P0</td>
+<td>封存與取消封存</td>
+<td>默认列表隱藏封存，封存不刪除資料</td>
+</tr>
+<tr>
+<td>FR-08</td>
+<td>P0</td>
+<td>Markdown 匯入為草稿</td>
+<td>不自動覆蓋原始檔案或現有資料庫版本</td>
+</tr>
+<tr>
+<td>FR-09</td>
+<td>P0</td>
+<td>本機 Token 計數</td>
+<td>o200k_base、cl100k_base；缺資料可明確降級粗估</td>
+</tr>
+<tr>
+<td>FR-10</td>
+<td>P0</td>
+<td>精簡候選與 Diff</td>
+<td>預設合併空白行，可選相鄰同文條列；保留 code fence</td>
+</tr>
+<tr>
+<td>FR-11</td>
+<td>P0</td>
+<td>情境成本分析</td>
+<td>必須有單價才顯示費用，單位為 USD／百萬 Token</td>
+</tr>
+<tr>
+<td>FR-12</td>
+<td>P0</td>
+<td>分析報告</td>
+<td>可下載 JSON，包含原文、候選、方法、數據、警告</td>
+</tr>
+<tr>
+<td>FR-13</td>
+<td>P0</td>
+<td>匯出預覽與安全寫回</td>
+<td>檔案存在狀態及 SHA-256 均須一致</td>
+</tr>
+<tr>
+<td>FR-14</td>
+<td>P0</td>
+<td>備份與復原</td>
+<td>不覆蓋套用後的外部變更，既有檔逐位元組還原</td>
+</tr>
+<tr>
+<td>FR-15</td>
+<td>P1</td>
+<td>Agent 記憶模組</td>
+<td>既有 4 Agent、15 模組沿用，內建規格日期可見</td>
+</tr>
+<tr>
+<td>FR-16</td>
+<td>P1</td>
+<td>基本記憶健檢</td>
+<td>檔名、重複文字、長度、空檔、疑似憑證</td>
+</tr>
+<tr>
+<td>FR-17</td>
+<td>P2</td>
+<td>真實模型品質評測面板</td>
+<td>本期以研究腳本／人工記錄規畫，不內建 API 呼叫</td>
+</tr>
+<tr>
+<td>FR-18</td>
+<td>P2</td>
+<td>多人同步與跨平台發布</td>
+<td>不屬本期 macOS 單人 MVP</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3">3. 使用情境與狀態</h2>
+<h3 id="uc-01">UC-01 建立並重用提示詞</h3>
+<p>前置：選定專案。使用者新增草稿，填標題、分類、標籤与內容，或使用引導模板產生草稿；按儲存後取得 id 與版本號。重新進入同專案可搜尋與開啟。欄位不完整時顯示原因，內容保留在畫面。</p>
+<h3 id="uc-02">UC-02 分析與採用精簡候選</h3>
+<p>使用者選 tokenizer、可選單價、呼叫次數與去重選項，按分析後得到原文／候選 Token、差異、成本與警告。僅在選擇「將候選帶回草稿」後變更編輯器，仍需另按儲存才寫入資料庫。任何影響內容或計算的輸入變更皆使先前分析失效。</p>
+<h3 id="uc-03">UC-03 匯入、匯出與復原</h3>
+<p>從目前掃描清單選 Markdown 匯入為草稿。匯出時輸入專案內 <code>.md</code> 相對路徑，先取得 Diff；若目標已存在，必須確認整份替換。套用前重新讀取目標、核對 hash 與存在狀態。成功後回傳 change_id；同次工作台可一鍵復原，持久歷史亦記錄於既有變更表。</p>
+<h3 id="uc-04">UC-04 歷史恢復</h3>
+<p>打開提示詞後顯示各版本。點選歷史版本只將其內容帶回草稿，保留當前版本號作為更新前置條件；儲存時建立下一版。若其他視窗先儲存，更新需被拒絕而非覆蓋。</p>
+<h3 id="_1">狀態模型</h3>
+<p>草稿 → 已分析 → 候選帶回草稿 → 已儲存版本。編輯草稿／分析條件後回到未分析。匯出另為未預覽 → 已預覽 → 已套用／衝突 → 已復原。資料庫儲存與檔案匯出是兩個明確操作，不隱含自動雙向同步。</p>
+<h2 id="4">4. 導航與介面</h2>
+<p>主導航為「提示詞工作台、專案、記憶編程、記憶健檢、設定」。新增工作台為預設入口，左欄顯示專案提示詞，中央編輯／模板／版本，右欄分析／候選／差異。視窗較窄時改為兩欄或單欄；不能依靠橫向捲動才能看到主要操作。</p>
+<p>畫面直接區分「儲存版本」「產生候選」「帶回草稿」「預覽檔案變更」「套用匯出」。按鈕不得將分析動作誤導為已完成檔案修改。HTML 顯示使用 textContent 或 escaping；使用者提示詞不作為 HTML 執行。</p>
+<p>瀏覽器模式顯示安全示範標記，提示詞存於該瀏覽器 localStorage，Token 標為粗估，檔案匯出提示需使用桌面版。不能假裝 mock 已寫入本機專案。</p>
+<h2 id="5">5. 技術架構</h2>
+<p>前端：原生 HTML、CSS、JavaScript ES modules；app.js 處理既有流程，prompt-workspace.js 處理新增工作台。</p>
+<p>桌面：pywebview／macOS WebKit。AppBridge 等待 bridge 方法準備完成，再選桌面或 mock。</p>
+<p>服務：DesktopApi 暴露結構化 API；prompt_workbench.py 做純文字分析；PromptLibrary 提供交易化版本保存；既有掃描、compiler、健檢與備份服務沿用。</p>
+<p>持久層：SQLite、使用者專案 Markdown、Application Support 備份。版本化 tokenizer 資料隨 resources 打包。開發時可連網下載套件與準備 tokenizer；執行期計數直接讀本機資料，不使用 tiktoken URL registry。</p>
+<h2 id="6-migration">6. 資料規格與 migration</h2>
+<h3 id="prompt_library">prompt_library</h3>
+<table>
+<thead>
+<tr>
+<th>欄位</th>
+<th>型別／規則</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>INTEGER PK</td>
+<td>提示詞識別碼</td>
+</tr>
+<tr>
+<td>project_path</td>
+<td>TEXT NOT NULL</td>
+<td>解析後的授權專案路徑</td>
+</tr>
+<tr>
+<td>title</td>
+<td>TEXT，1–200 字</td>
+<td>名稱</td>
+</tr>
+<tr>
+<td>content</td>
+<td>TEXT，非空且最多 200,000 字元</td>
+<td>原始提示詞</td>
+</tr>
+<tr>
+<td>category</td>
+<td>TEXT，最多 100 字</td>
+<td>分類</td>
+</tr>
+<tr>
+<td>tags</td>
+<td>TEXT，最多 500 字</td>
+<td>逗號分隔標籤</td>
+</tr>
+<tr>
+<td>version</td>
+<td>INTEGER，自 1 遞增</td>
+<td>並行更新檢查</td>
+</tr>
+<tr>
+<td>archived</td>
+<td>0／1</td>
+<td>可回復封存</td>
+</tr>
+<tr>
+<td>created_at／updated_at</td>
+<td>UTC ISO 字串</td>
+<td>時間</td>
+</tr>
+</tbody>
+</table>
+<h3 id="prompt_revisions">prompt_revisions</h3>
+<p>欄位為 id、prompt_id、version、title、content、category、tags、created_at。prompt_id 對應 prompt_library；(prompt_id, version) 唯一。版本記錄完整文字快照，不是僅存 Diff。</p>
+<p>schema_migrations 新增版本 3。新表採 additive schema；舊 memory_items、memory_versions、prompt_templates、ai_processing_runs、memory_file_changes 均保留。舊提示詞資料未自動合併進新表，避免類別語意與專案對應不明；需要時可從舊入口匯出再匯入。</p>
+<p>初始化 settings 改為 INSERT OR IGNORE，避免每次啟動重置使用者設定。資料庫實際路徑保持相容；測試透過 AI_MEMORY_APP_DB_PATH 使用獨立 DB。</p>
+<h2 id="7-api">7. API 合約</h2>
+<p>統一回應：<code>{ok: boolean, data: object|array|null, error: string|null}</code>。前端不得在 ok=false 時繼續套用。公開 API 不執行使用者提供的 shell 命令。</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>輸入</th>
+<th>成功輸出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>list_prompts</td>
+<td>project_path, query, category, archived</td>
+<td>提示詞列表</td>
+</tr>
+<tr>
+<td>save_prompt</td>
+<td>project_path, id?, version?, title, content, category, tags, archived</td>
+<td>新提示詞狀態與版本</td>
+</tr>
+<tr>
+<td>list_prompt_versions</td>
+<td>project_path, prompt_id</td>
+<td>歷史快照，版本倒序</td>
+</tr>
+<tr>
+<td>analyze_prompt</td>
+<td>content, encoding, input_price?, calls, remove_duplicates</td>
+<td>分析結果</td>
+</tr>
+<tr>
+<td>preview_prompt_file</td>
+<td>project_path, relative_path, content</td>
+<td>original, compiled, exists, base_hash, diff</td>
+</tr>
+<tr>
+<td>apply_prompt_file</td>
+<td>前述請求＋base_hash, expected_exists, confirm_replace</td>
+<td>change_id, relative_path</td>
+</tr>
+<tr>
+<td>restore_change</td>
+<td>change_id</td>
+<td>復原結果</td>
+</tr>
+</tbody>
+</table>
+<p>既有 choose_project_root、list_projects、scan_project、read_memory_file、get_agent_catalog、compile_memory_module、apply_memory_change、list_change_history、run_memory_health_check 持續提供。</p>
+<p>AnalyzeResult 必含 original、candidate、before／after（count、method、exact_text）、saved_tokens、saved_percent、changes、warnings、base_hash、diff、cost。cost 未設定價格時為 null；其餘包含 USD、單價、呼叫數、前後費用與計算範圍文字。</p>
+<h2 id="8">8. 分析演算法與限制</h2>
+<p>Tokenizer 僅接受 o200k_base、cl100k_base、estimate。特殊 token 外觀字串按普通內容編碼，不讓使用者文字觸發控制 token 處理。資源不存在或依賴不可用時回傳明確粗估狀態。</p>
+<p>粗估公式為 ASCII 字元權重 1、非 ASCII 權重 4，加總後除以 4 向上取整。此為顯示回退，不保證對中文、emoji 或任何特定供應商準確。</p>
+<p>精簡規則：保留非空文字原樣；code fence 內保留換行與重複程式；連續空白行最多留一行；僅當選項開啟時移除相鄰完全相同的頂層 <code>-</code>、<code>*</code>、<code>+</code> 條列。跨段落、數字清單或近義句不自動去重。不解析所有 Markdown 方言，因此複雜巢狀結構仍需人工看 Diff。</p>
+<p>若計數不減少則不宣稱節省；若增加則退回原文。單价須為有限非負數；calls 為 1–10,000,000 整數。關鍵字引導與疑似秘密提醒皆為啟發式，不是語意衝突判定或安全保證。</p>
+<h2 id="9">9. 安全寫回與一致性</h2>
+<p>指定路徑只能為專案內相對 <code>.md</code>，拒絕絕對路徑、<code>..</code>、直接 symlink 目標與經父層 symlink 越界。掃描排除指向根外的檔案。備份檔案保留在 Application Support。</p>
+<p>寫回前檢查預覽時 hash 與 exists 狀態；可防止「原先不存在、後來建立空檔」也被同一空 hash 忽略。復原檢查目前內容仍等於本次輸出；既有檔從原備份 UTF-8 bytes 還原，包含 CRLF。一般提示詞匯出屬整檔替換，不能描述成 managed section 更新。</p>
+<p>目前不是跨程序分散式鎖。hash 核對到 atomic replace 之間仍有極短競態窗口；磁碟寫入與 SQLite 記錄也不是同一原子交易。第一版對同一檔案使用者應避免並行寫入，這是已知限制，不宣稱完整多程序 ACID。後續可加入 per-path lock 與 pending journal。</p>
+<h2 id="10">10. 非功能需求</h2>
+<p>NFR-01：核心保存、計數、精簡不發出模型 API 請求；缺少 tokenizer 資源時回退粗估而非偷偷下載。</p>
+<p>NFR-02：保留 Unicode 文字、Markdown 程式碼及既有資料；未確認的預覽不直接改檔。</p>
+<p>NFR-03：新頁面所有欄位有文字標籤，鍵盤可達，顯示焦點；小螢幕採單欄，不以圖示單獨表示重要操作。</p>
+<p>NFR-04：輸入長度上限 200,000 字元；性能目標是在基準機器上，10,000 字提示詞暖啟動分析於 1 秒內。硬體、冷／暖啟動與實測需記錄，不跨機器保證。</p>
+<p>NFR-05：SQLite 檔案在正常重啟後資料持續存在；版本更新具交易保護，錯誤不應留下半筆版本。</p>
+<p>NFR-06：網路來源與 Agent catalog 日期可見。2026-07-19 的舊 catalog 不能標示為 2026-09-25 已全面重驗。</p>
+<h2 id="11">11. 測試與追蹤</h2>
+<table>
+<thead>
+<tr>
+<th>驗收 ID</th>
+<th>關聯需求</th>
+<th>方法與通過條件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC-01</td>
+<td>FR-01/03</td>
+<td>空根目錄可選，建立提示詞後可找回</td>
+</tr>
+<tr>
+<td>AC-02</td>
+<td>FR-04/07</td>
+<td>依關鍵字／分類過濾，封存切換結果正確</td>
+</tr>
+<tr>
+<td>AC-03</td>
+<td>FR-06</td>
+<td>版本遞增，旧 version 拒絕，跨專案更新拒絕</td>
+</tr>
+<tr>
+<td>AC-04</td>
+<td>FR-09</td>
+<td>禁止 socket 時兩種內建 tokenizer 仍可計數</td>
+</tr>
+<tr>
+<td>AC-05</td>
+<td>FR-10</td>
+<td>程式碼與變数不被刪除；預設不去重條列</td>
+</tr>
+<tr>
+<td>AC-06</td>
+<td>FR-11</td>
+<td>價格、次數、差額公式正確，負數／NaN／非整數被拒絕</td>
+</tr>
+<tr>
+<td>AC-07</td>
+<td>FR-13</td>
+<td>衝突 hash、檔案存在狀態改變與越界拒絕</td>
+</tr>
+<tr>
+<td>AC-08</td>
+<td>FR-14</td>
+<td>套用後復原 bytes 與原檔相同</td>
+</tr>
+<tr>
+<td>AC-09</td>
+<td>migration</td>
+<td>版本 3 表存在，舊資料與使用者設定保留</td>
+</tr>
+<tr>
+<td>AC-10</td>
+<td>UI</td>
+<td>模板→儲存→搜尋→分析→候選→歷史；桌面與窄螢幕無阻塞錯誤</td>
+</tr>
+<tr>
+<td>AC-11</td>
+<td>FR-12</td>
+<td>報告 JSON 可解析，明示計數與成本範圍</td>
+</tr>
+<tr>
+<td>AC-12</td>
+<td>打包</td>
+<td>pywebview、前端與 tokenizer 資源被包含，App 可啟動</td>
+</tr>
+</tbody>
+</table>
+<p>自動測試位於 tests/test_prompt_studio.py 與既有 tests；Token 基準位於 scripts/benchmark_prompts.py。UI 冒煙測試與檢查證據記錄在 docs/evidence。軟體測試通過不等同 RQ1–RQ4 的使用者研究完成。</p>
+<h2 id="12">12. 發布與回退</h2>
+<p>輸出平行測試版 <code>dist/AI Prompt Studio Next.app</code>，不取代搬移備份中的舊 App。保留 run_legacy_app.py。此工作區從搬移的原專案複製原始碼建立，沒有複製舊 build、dist 或使用者的 DB，因此新安裝仍沿用既有 Application Support DB 或指定測試 DB。</p>
+<p>本地 ad-hoc codesign 只能驗證封裝完整性，不等同 Apple Developer ID 與 notarization。正式對外發布、Windows/Linux 適配、團隊同步與付費 API 實验各需獨立決策。</p>
+<h2 id="13">13. 已知差距與後續</h2>
+<p>現有 Agent 健檢仍是近似載入模擬，沒有完整解析所有平台的 override、import、global config 與執行時權限；也未实现任意自然語言矛盾辨識。設定目前提供規格與來源展示，尚未完整提供備份保留數、介面偏好與預設根目錄管理。這些早期 2.0 規畫內容不能因既有完成報告而視為全部已驗收。</p>
+<p>本期核心優先對齊給老師的提示詞管理與 Token 分析主題。研究資料、真人評估、品質對照結果、最終簡報與學校格式，待取得真實資料後再完成，不生成虛構實驗結論。</p></main></html>
