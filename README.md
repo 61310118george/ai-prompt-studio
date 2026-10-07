@@ -214,6 +214,7 @@ SQLite 資料庫預設儲存在：
 
 - [完整企劃書](docs/專題企劃書.md)
 - [可編輯企劃書 Word](output/word/AI提示詞視覺化管理App_完整企劃書.docx)
+- [精簡易讀版企劃書 Word](output/word/AI提示詞視覺化管理App_完整企劃書_精簡易讀版.docx)
 - [企劃書 PDF](output/pdf/AI提示詞視覺化管理App_完整企劃書.pdf)
 - [軟體需求與技術 Spec](docs/SPEC.md)
 - [可編輯 Spec Word](output/word/AI提示詞視覺化管理App_軟體需求規格書.docx)
