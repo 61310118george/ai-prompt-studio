@@ -16,16 +16,16 @@
           <div><strong>AI Prompt Studio</strong><span>提示詞視覺化管理</span></div>
         </div>
         <nav class="nav-list" id="navList"></nav>
-        <div class="sidebar-status">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span id="runtimeLabel">確認執行環境中</span>
+        <div class="sidebar-status" aria-live="polite">
+          <div class="sidebar-status-row"><span class="sidebar-status-label">版本</span><strong id="appVersion">V1.4</strong></div>
+          <div class="sidebar-status-row"><span class="status-dot api-unconfigured" id="apiStatusDot" aria-hidden="true"></span><span class="status-text" id="apiStatusText">API：確認中</span></div>
         </div>
       </aside>
 
       <main class="workspace" id="mainContent" tabindex="-1">
         <header class="topbar">
           <div>
-            <p class="eyebrow">本機整理 · 可量測的輸入成本</p>
+            <p class="eyebrow">本機整理 · 清楚管理 AI 指令</p>
             <h1 id="pageTitle">專案</h1>
           </div>
           <div class="root-control">
@@ -49,7 +49,7 @@
               <div class="selection-list" id="projectList"><div class="empty-state">選擇根目錄後顯示專案。</div></div>
             </section>
             <section class="panel file-list-panel" aria-labelledby="fileListTitle">
-              <div class="panel-heading"><div><span class="step">02</span><h3 id="fileListTitle">Markdown 地圖</h3></div><span class="count" id="fileCount">0</span></div>
+              <div class="panel-heading"><div><span class="step">02</span><h3 id="fileListTitle">提示詞一覽表</h3></div><span class="count" id="fileCount">0</span></div>
               <div class="project-summary" id="projectSummary"></div>
               <div class="file-table-wrap">
                 <table class="file-table">
@@ -59,7 +59,7 @@
               </div>
             </section>
             <section class="panel file-preview-panel" aria-labelledby="filePreviewTitle">
-              <div class="panel-heading"><div><span class="step">03</span><h3 id="filePreviewTitle">內容預覽</h3></div></div>
+              <div class="panel-heading"><div><span class="step">03</span><h3 id="filePreviewTitle">內容預覽</h3></div><button class="button secondary" id="editFileButton" disabled>編輯</button></div>
               <div class="preview-path" id="previewPath">未選擇檔案</div>
               <pre class="code-view muted" id="filePreview">從中間列表選擇 Markdown。</pre>
             </section>
@@ -109,24 +109,25 @@
 
         <section class="page" id="page-health" aria-labelledby="pageTitle">
           <div class="page-intro">
-            <div><h2>記憶健檢</h2><p>檢查檔名、作用域、重複內容、檔案大小與可能洩漏的敏感資訊；不會自動修改。</p></div>
-            <div class="inline-actions"><label>模擬 Agent<select id="healthAgentSelect"></select></label><button class="button primary" id="runHealthButton" type="button">開始健檢</button></div>
+            <div><h2>記憶健檢</h2><p>選擇資料夾後自動檢查敏感資訊、攻擊指令與重複內容。點選檔案查看問題位置。</p></div>
+            <div class="inline-actions"><label class="hidden">Agent<select id="healthAgentSelect"></select></label><button class="button primary" id="runHealthButton" type="button">重新健檢</button></div>
           </div>
           <div class="stat-grid" id="healthStats">
-            <article class="stat-card"><span>錯誤</span><strong>—</strong></article><article class="stat-card"><span>警告</span><strong>—</strong></article><article class="stat-card"><span>提醒</span><strong>—</strong></article><article class="stat-card"><span>估算 token</span><strong>—</strong></article>
+            <article class="stat-card"><span>敏感／錯誤</span><strong>—</strong></article><article class="stat-card"><span>風險待確認</span><strong>—</strong></article><article class="stat-card"><span>整理建議</span><strong>—</strong></article><article class="stat-card"><span>掃描文件</span><strong>—</strong></article>
           </div>
           <div class="health-layout">
-            <section class="panel"><div class="panel-heading"><div><h3>有效記憶模擬</h3><p id="loadBehavior">選擇專案後開始健檢。</p></div></div><ol class="memory-stack" id="effectiveFiles"><li class="empty-state">尚無結果。</li></ol></section>
-            <section class="panel"><div class="panel-heading"><div><h3>健檢結果</h3></div><span class="count" id="issueCount">0</span></div><div class="issue-list" id="issueList"><div class="empty-state">健檢結果會顯示在這裡。</div></div></section>
+            <section class="panel"><div class="panel-heading"><h3>需要確認的文件</h3></div><div id="healthFiles" class="selection-list"><p class="empty-state">選擇資料夾後顯示結果。</p></div></section>
+            <section class="panel" id="healthPreview"><p class="empty-state">選擇左側文件，查看標示的問題行。</p></section>
           </div>
+          <p class="source-note" id="healthScope">掃描 Markdown 與技能文件，所有分析在本機進行。</p>
+          <p class="field-help">規則參考：<a href="https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Prompt Injection Prevention</a> · 查證 2026-10-07</p>
         </section>
 
         <section class="page" id="page-settings" aria-labelledby="pageTitle">
           <div class="page-intro"><div><h2>設定與規格來源</h2><p>確認 App 使用的 Agent 規格版本、查證日期與官方來源。</p></div></div>
           <div class="settings-layout">
-            <section class="panel setting-card"><h3>本機安全</h3><dl><div><dt>核心模式</dt><dd>完全離線，不需 API Key</dd></div><div><dt>寫入方式</dt><dd>managed section + atomic replace</dd></div><div><dt>備份位置</dt><dd>macOS Application Support</dd></div></dl></section>
             <section class="panel setting-card"><h3>Agent 規格目錄</h3><dl><div><dt>版本</dt><dd id="catalogVersion">—</dd></div><div><dt>最後查證</dt><dd id="catalogVerified">—</dd></div><div><dt>正式支援</dt><dd>Codex、Claude Code、Gemini CLI、OpenClaw</dd></div></dl></section>
-            <section class="panel sources-card"><div class="panel-heading"><div><h3>官方與代表性來源</h3><p>App 不會在執行時連線或自動下載模板。</p></div></div><div class="source-list" id="sourceList"></div></section>
+            <section class="panel sources-card"><div class="panel-heading"><div><h3>官方與代表性來源</h3><p>模板內建且不自動下載；只有明確確認的 AI 分析會連線。</p></div></div><div class="source-list" id="sourceList"></div></section>
             <section class="panel sources-card"><div class="panel-heading"><div><h3>第二階段相容性</h3><p>目前只提供資料說明，不承諾可寫入。</p></div></div><div class="future-list" id="futureList"></div></section>
           </div>
         </section>

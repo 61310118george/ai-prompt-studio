@@ -23,4 +23,5 @@ build/
 dist/
 tmp/
 
-# The distributable macOS app is committed as deliverables/AI Prompt Studio Next.zip
+# The distributable macOS app is committed as a zip in deliverables/.
+deliverables/*.app/

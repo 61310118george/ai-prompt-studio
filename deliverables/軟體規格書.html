@@ -3,11 +3,14 @@ body{margin:0;background:#f1eee8;color:#222;font-family:-apple-system,BlinkMacSy
 main{max-width:900px;margin:36px auto;background:white;padding:52px 64px;box-shadow:0 12px 50px #0001}
 h1,h2,h3{color:#111;line-height:1.4;break-after:avoid}h1{font-size:29px;border-bottom:2px solid #333;padding-bottom:20px}h2{font-size:23px;margin-top:40px}h3{font-size:18px;margin-top:26px}
 p,li{font-size:15px}table{border-collapse:collapse;width:100%;font-size:13px;margin:18px 0 24px}th,td{border:1px solid #d9d9d9;padding:10px 12px;text-align:left;vertical-align:top}th{background:#edf1f5}tr{break-inside:avoid}thead{display:table-header-group}
-a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;padding:2px 4px;overflow-wrap:anywhere}pre{white-space:pre-wrap}nav{font-size:14px;padding-bottom:16px;border-bottom:1px solid #ddd}
+a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;padding:2px 4px;overflow-wrap:anywhere}pre{white-space:pre-wrap}img{display:block;max-width:100%;height:auto;margin:18px auto;border:1px solid #ddd}nav{font-size:14px;padding-bottom:16px;border-bottom:1px solid #ddd}
 @media(max-width:760px){main{margin:0;padding:25px 20px}table{font-size:12px}th,td{padding:6px}}
 @media print{@page{size:A4;margin:18mm}body{background:white}main{max-width:none;margin:0;padding:0;box-shadow:none}nav{display:none}h1{font-size:24px}h2{font-size:19px}p,li{font-size:11pt}table{font-size:9.5pt}a{color:#111;text-decoration:none}}
 </style><main><nav><a href="專題企劃書.html">專題企劃書</a> · <a href="軟體規格書.html">軟體規格書</a> · <a href="現況符合度.html">現況符合度</a> · <a href="研究與展示指南.html">研究與展示指南</a> · 可使用瀏覽器列印</nav><h1 id="ai-prompt-studio">AI Prompt Studio：軟體需求與技術規格</h1>
-<p>版本：1.1｜同步日期：2026-09-26｜狀態：本機單人 MVP 桌面交付基準</p>
+<blockquote>
+<p>2026-10-07 修訂：最新介面與驗收規格以 <a href="revision-2.1.md">revision-2.1.md</a> 為準。移除獨立記憶編程導航及成本面板，改成文件編輯彈窗、簡明負擔提示與逐行健檢。以下 1.2 內容保留作為既有服務與資料相容性背景。</p>
+</blockquote>
+<p>版本：1.2｜同步日期：2026-09-26｜狀態：本機單人 MVP 桌面交付基準</p>
 <p>交付形式：<code>dist/AI Prompt Studio Next.app</code>。桌面版直接內嵌最終 <code>web-preview/</code>，不是另外重寫或只開外部網站；五個功能區（提示詞、專案、記憶編程、記憶健檢、設定）共用同一份前端。瀏覽器使用示範資料，App 使用 Python bridge、SQLite 與真實本機檔案。桌面包內附兩種 tokenizer 資料，核心執行不需要網路。</p>
 <p>本文件定義新主題「AI 提示詞視覺化管理 App」的工程範圍。未列為已實作的研究或擴充功能，不得出現在成果中當作已完成能力。企劃書說明為何做，本文件說明系統必須如何運作與如何驗收。</p>
 <h2 id="1">1. 產品邊界與名詞</h2>
@@ -151,6 +154,64 @@ a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;p
 <p>主導航為「提示詞工作台、專案、記憶編程、記憶健檢、設定」。新增工作台為預設入口，左欄顯示專案提示詞，中央編輯／模板／版本，右欄分析／候選／差異。視窗較窄時改為兩欄或單欄；不能依靠橫向捲動才能看到主要操作。</p>
 <p>畫面直接區分「儲存版本」「產生候選」「帶回草稿」「預覽檔案變更」「套用匯出」。按鈕不得將分析動作誤導為已完成檔案修改。HTML 顯示使用 textContent 或 escaping；使用者提示詞不作為 HTML 執行。</p>
 <p>瀏覽器模式顯示安全示範標記，提示詞存於該瀏覽器 localStorage，Token 標為粗估，檔案匯出提示需使用桌面版。不能假裝 mock 已寫入本機專案。</p>
+<h3 id="41">4.1 畫面規格與用途</h3>
+<p>本節依照「畫面目的、主要控制、回饋與限制」記錄介面，不以「好看、直覺」等無法驗證的形容詞作為需求。圖片使用瀏覽器安全示範資料；桌面 App 內嵌相同前端，執行環境標籤與可用能力則由 bridge 判斷。</p>
+<table>
+<thead>
+<tr>
+<th>畫面</th>
+<th>目的</th>
+<th>主要操作</th>
+<th>必要回饋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>提示詞工作台</td>
+<td>管理提示詞並看見輸入成本</td>
+<td>新增、搜尋、分類、儲存版本、分析、帶回候選、匯入／匯出</td>
+<td>草稿／版本狀態、Token 方法、差異、警告、成本範圍</td>
+</tr>
+<tr>
+<td>專案</td>
+<td>檢視根目錄內 Markdown 與 Agent 辨識結果</td>
+<td>選專案、重新掃描、預覽、進入編程</td>
+<td>檔案數、辨識平台、作用域、載入狀態</td>
+</tr>
+<tr>
+<td>記憶編程</td>
+<td>用結構化欄位產生受管理 Markdown</td>
+<td>選 Agent／檔案／模組、填表、預覽、Diff、套用</td>
+<td>尚未寫入、必填警告、寫入成功、變更紀錄</td>
+</tr>
+<tr>
+<td>記憶健檢</td>
+<td>顯示有效記憶與問題</td>
+<td>選 Agent、開始健檢</td>
+<td>錯誤／警告／提醒數、估算 Token、有效檔案順序</td>
+</tr>
+<tr>
+<td>設定</td>
+<td>查閱安全方式與規格來源</td>
+<td>查看版本與官方連結</td>
+<td>規格版本、查證日期、正式／未正式支援範圍</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="圖 S-1 提示詞工作台" src="../docs/evidence/interfaces/01-prompt-workbench.png" /></p>
+<p>圖 S-1　提示詞工作台的三欄配置。驗收重點：主要動作在 1440 px 可同時看見；編輯內容或分析條件後，舊候選必須失效；沒有單價時不得顯示推測費用。瀏覽器截圖中的 browser-heuristic 是示範模式，桌面版應顯示所選本機 tokenizer。</p>
+<p><img alt="圖 S-2 專案檔案地圖" src="../docs/evidence/interfaces/02-project-map.png" /></p>
+<p>圖 S-2　專案檔案地圖。驗收重點：未辨識檔案標為一般 Markdown；同一檔案可同時顯示多個平台分類；預覽不得執行檔案中的 HTML 或指令。</p>
+<p><img alt="圖 S-3 記憶編程" src="../docs/evidence/interfaces/03-memory-programming.png" /></p>
+<p>圖 S-3　記憶編程與 Markdown 預覽。驗收重點：右側結果在按下「套用到檔案」前只屬預覽；切換 Diff 不改檔；必要欄位缺少時停用套用。</p>
+<p><img alt="圖 S-4 記憶健檢" src="../docs/evidence/interfaces/04-memory-health.png" /></p>
+<p>圖 S-4　有效記憶模擬與健檢。驗收重點：健檢為唯讀；使用者切換 Agent 後重新計算；估算 Token 不得標成 API 帳單。</p>
+<p><img alt="圖 S-5 規格來源" src="../docs/evidence/interfaces/05-settings-sources.png" /></p>
+<p>圖 S-5　設定與規格來源。驗收重點：每個正式支援 Agent 至少顯示一個來源；版本與查證日期不得留白；第二階段平台不得誤標為已支援寫入。</p>
+<h3 id="42">4.2 基本操作流程</h3>
+<p>提示詞：選專案 → 新增／匯入 → 編輯 → 儲存版本 → 選 tokenizer → 分析 → 查看候選與 Diff → 帶回草稿 → 再存一版 → 視需要預覽並匯出。</p>
+<p>記憶檔：選專案 → 查看辨識結果 → 進入記憶編程 → 選平台與模組 → 填表 → 產生預覽 → 查看 Diff → 套用 → 在最近變更中復原。</p>
+<p>任何會修改檔案的流程都必須經過預覽；任何只做分析的按鈕都不能造成資料庫或檔案寫入。</p>
 <h2 id="5">5. 技術架構</h2>
 <p>前端：原生 HTML、CSS、JavaScript ES modules；app.js 處理既有流程，prompt-workspace.js 處理新增工作台。</p>
 <p>桌面：pywebview／macOS WebKit。AppBridge 等待 bridge 方法準備完成，再選桌面或 mock。</p>
@@ -214,9 +275,11 @@ a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;p
 </tr>
 </tbody>
 </table>
+<h3 id="prompt_groups">prompt_groups</h3>
+<p>欄位為 id、project_path、name、sort_order、created_at。群組名稱在同一專案路徑內唯一；既有提示詞的 <code>category</code> 即為所屬群組。拖曳不覆寫內容或版本，只更新所屬群組與更新時間。</p>
 <h3 id="prompt_revisions">prompt_revisions</h3>
 <p>欄位為 id、prompt_id、version、title、content、category、tags、created_at。prompt_id 對應 prompt_library；(prompt_id, version) 唯一。版本記錄完整文字快照，不是僅存 Diff。</p>
-<p>schema_migrations 新增版本 3。新表採 additive schema；舊 memory_items、memory_versions、prompt_templates、ai_processing_runs、memory_file_changes 均保留。舊提示詞資料未自動合併進新表，避免類別語意與專案對應不明；需要時可從舊入口匯出再匯入。</p>
+<p>schema_migrations 新增至版本 4。新表採 additive schema；舊 memory_items、memory_versions、prompt_templates、ai_processing_runs、memory_file_changes 均保留。舊提示詞資料未自動合併進新表，避免類別語意與專案對應不明；需要時可從舊入口匯出再匯入。</p>
 <p>初始化 settings 改為 INSERT OR IGNORE，避免每次啟動重置使用者設定。資料庫實際路徑保持相容；測試透過 AI_MEMORY_APP_DB_PATH 使用獨立 DB。</p>
 <h2 id="7-api">7. API 合約</h2>
 <p>統一回應：<code>{ok: boolean, data: object|array|null, error: string|null}</code>。前端不得在 ok=false 時繼續套用。公開 API 不執行使用者提供的 shell 命令。</p>
@@ -238,6 +301,21 @@ a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;p
 <td>save_prompt</td>
 <td>project_path, id?, version?, title, content, category, tags, archived</td>
 <td>新提示詞狀態與版本</td>
+</tr>
+<tr>
+<td>list_prompt_groups</td>
+<td>project_path</td>
+<td>群組清單</td>
+</tr>
+<tr>
+<td>create_prompt_group</td>
+<td>project_path, name</td>
+<td>建立群組</td>
+</tr>
+<tr>
+<td>move_prompt_to_group</td>
+<td>project_path, prompt_id, group_name</td>
+<td>更新範本所屬群組</td>
 </tr>
 <tr>
 <td>list_prompt_versions</td>
@@ -362,4 +440,10 @@ a{color:#275678;overflow-wrap:anywhere}code{font-size:.88em;background:#f5f5f5;p
 <p>本地 ad-hoc codesign 只能驗證封裝完整性，不等同 Apple Developer ID 與 notarization。正式對外發布、Windows/Linux 適配、團隊同步與付費 API 實验各需獨立決策。</p>
 <h2 id="13">13. 已知差距與後續</h2>
 <p>現有 Agent 健檢仍是近似載入模擬，沒有完整解析所有平台的 override、import、global config 與執行時權限；也未实现任意自然語言矛盾辨識。設定目前提供規格與來源展示，尚未完整提供備份保留數、介面偏好與預設根目錄管理。這些早期 2.0 規畫內容不能因既有完成報告而視為全部已驗收。</p>
-<p>本期核心優先對齊給老師的提示詞管理與 Token 分析主題。研究資料、真人評估、品質對照結果、最終簡報與學校格式，待取得真實資料後再完成，不生成虛構實驗結論。</p></main></html>
+<p>本期核心優先對齊給老師的提示詞管理與 Token 分析主題。研究資料、真人評估、品質對照結果、最終簡報與學校格式，待取得真實資料後再完成，不生成虛構實驗結論。</p>
+<h2 id="14">14. 參考依據與使用範圍</h2>
+<ul>
+<li>ISO/IEC/IEEE 29148 公開介紹：https://www.iso.org/obp/ui?<em>escaped_fragment</em>=iso%3Astd%3Aiso-iec-ieee%3A29148%3Aed-2%3Av1%3Aen</li>
+<li>南臺科技大學軟體工程教材，軟體需求規格格式：https://faculty.stust.edu.tw/~pwchen/se/Chapter02.pdf</li>
+<li>國立東華大學資訊管理學系專題製作規定：https://im.ndhu.edu.tw/var/file/50/1050/img/4912/675555425.pdf</li>
+</ul></main></html>

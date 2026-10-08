@@ -172,6 +172,15 @@ CREATE TABLE IF NOT EXISTS prompt_revisions (
   UNIQUE(prompt_id, version)
 );
 
+CREATE TABLE IF NOT EXISTS prompt_groups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_path TEXT NOT NULL,
+  name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE(project_path, name)
+);
+
 CREATE INDEX IF NOT EXISTS idx_memory_items_main_area ON memory_items(main_area);
 CREATE INDEX IF NOT EXISTS idx_memory_items_category ON memory_items(category);
 CREATE INDEX IF NOT EXISTS idx_memory_items_enabled ON memory_items(enabled);
@@ -285,6 +294,10 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
     connection.execute(
         "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (3, ?, ?)",
         ("Prompt library and immutable prompt revisions", utc_now()),
+    )
+    connection.execute(
+        "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (4, ?, ?)",
+        ("Prompt library groups and drag-to-organize", utc_now()),
     )
 
 

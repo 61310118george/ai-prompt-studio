@@ -207,7 +207,7 @@ def create_pdf(source_name: str, output_name: str, title: str, subtitle: str, me
     ]
     cover = [Spacer(1, 38*mm), Paragraph(title, cover_title), Paragraph(subtitle, cover_subtitle),
              Spacer(1, 8*mm), Paragraph(meta + "<br/><br/>學生：____________　系級：____________<br/>指導老師：____________", cover_meta), Spacer(1, 24*mm),
-             Table([[Paragraph("專題文件", cover_meta), Paragraph("2026-09-26", cover_meta)]],
+             Table([[Paragraph("專題文件", cover_meta), Paragraph("2026-10-08", cover_meta)]],
                    colWidths=[55*mm, 55*mm], style=TableStyle([
                        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BROWN), ("BOX", (0, 0), (-1, -1), 0.6, LINE),
                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("TOPPADDING", (0, 0), (-1, -1), 10),
@@ -222,12 +222,12 @@ if __name__ == "__main__":
     outputs = [
         create_pdf("專題企劃書.md", "AI提示詞視覺化管理App_完整企劃書.pdf",
                    "AI 提示詞視覺化管理 App",
-                   "完整專題企劃書｜本機提示詞管理、Token 分析與 Agent 記憶視覺化",
-                   "版本 1.2｜含實際操作介面、研究方法、時程、風險與評估設計"),
+                   "精簡企劃書｜本機提示詞管理、專案記憶與 Token 輸入負擔",
+                   "版本 V1.4｜含操作介面、研究方法、時程、風險與評估設計"),
         create_pdf("SPEC.md", "AI提示詞視覺化管理App_軟體需求規格書.pdf",
                    "AI Prompt Studio",
                    "軟體需求與技術規格書（SRS）",
-                   "版本 1.2｜含介面規格、功能需求、資料結構、API、安全與驗收"),
+                   "版本 V1.4｜含介面規格、功能需求、資料結構、API、安全與驗收"),
     ]
     for output in outputs:
         print(output)

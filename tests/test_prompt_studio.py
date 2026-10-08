@@ -84,6 +84,16 @@ def test_library_versions_scoping_search_and_archive(api, tmp_path):
     assert len(service.list_prompt_versions(str(root), first["id"])["data"]) == 3
 
 
+def test_prompt_groups_can_be_created_and_used_for_drag_move(api):
+    service, root, _ = api
+    item = service.save_prompt({"project_path": str(root), "title": "可移動範本", "content": "內容", "category": "一般"})["data"]
+    created = service.create_prompt_group(str(root), "課堂作業")["data"]
+    assert created["name"] == "課堂作業"
+    moved = service.move_prompt_to_group(str(root), item["id"], "課堂作業")["data"]
+    assert moved["category"] == "課堂作業"
+    assert [group["name"] for group in service.list_prompt_groups(str(root))["data"]][:2] == ["課堂作業", "一般"]
+
+
 def test_export_diff_conflict_and_byte_exact_restore(api):
     service, root, _ = api
     target = root / "prompt.md"

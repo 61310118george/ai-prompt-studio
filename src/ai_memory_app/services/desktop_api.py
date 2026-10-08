@@ -17,6 +17,7 @@ from .memory_compiler import compile_memory_module, content_hash
 from .memory_health import run_memory_health_check
 from .project_scanner import scan_project
 from .prompt_workbench import analyze_prompt, validate_text
+from .cloud_advisor import CloudAdvisor
 
 
 class DesktopApi:
@@ -26,6 +27,16 @@ class DesktopApi:
         self.allowed_root: Path | None = None
         self.backup_root = backup_root or (APP_SUPPORT_DIR / "backups")
         self.prompts = PromptLibrary(repository.db_path)
+        self._cloud_advisor = CloudAdvisor()
+
+    def get_cloud_settings(self):
+        return self._safe_call(self._cloud_advisor.status)
+
+    def configure_cloud_analysis(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.configure(request))
+
+    def analyze_with_ai(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.analyze(request))
 
     def attach_window(self, window) -> None:
         self.window = window
@@ -126,7 +137,9 @@ class DesktopApi:
             project = self._project_path(project_path)
             target = self._target_path(project, relative_path)
             exists = target.exists()
-            content = target.read_text(encoding="utf-8") if exists else ""
+            if exists and target.stat().st_size > 2_000_000:
+                raise ValueError("檔案超過 2 MB，請先拆分後再編輯。")
+            content = target.read_bytes().decode("utf-8") if exists else ""
             return {"relative_path": relative_path, "exists": exists, "content": content, "hash": content_hash(content)}
         return self._safe_call(load)
 
@@ -141,6 +154,15 @@ class DesktopApi:
 
     def list_prompt_versions(self, project_path: str, prompt_id: int) -> dict:
         return self._safe_call(lambda: self.prompts.history(str(self._project_path(project_path)), prompt_id))
+
+    def list_prompt_groups(self, project_path: str) -> dict:
+        return self._safe_call(lambda: self.prompts.groups(str(self._project_path(project_path))))
+
+    def create_prompt_group(self, project_path: str, name: str) -> dict:
+        return self._safe_call(lambda: self.prompts.create_group(str(self._project_path(project_path)), name))
+
+    def move_prompt_to_group(self, project_path: str, prompt_id: int, group_name: str) -> dict:
+        return self._safe_call(lambda: self.prompts.move_to_group(str(self._project_path(project_path)), prompt_id, group_name))
 
     def analyze_prompt(self, request: dict) -> dict:
         return self._safe_call(lambda: analyze_prompt(request))

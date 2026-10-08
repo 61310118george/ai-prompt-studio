@@ -1,10 +1,32 @@
 # AI Prompt Studio
 
-AI Prompt Studio 是一套以「專案」為單位的 AI 提示詞與 Agent 記憶視覺化管理工具。使用者可以在同一個介面中整理 Prompt、查看版本、估算 Token、瀏覽專案 Markdown 檔案，並以結構化表單產生 Agent 指令與記憶內容。
+AI Prompt Studio 是一套以「專案」為單位的 AI 提示詞與 Agent 記憶視覺化管理工具。使用者可以整理 Prompt、查看版本、瀏覽 Markdown，並直接在彈出視窗編輯文件。
+
+目前 App 版本：**V1.4**。版本字串統一維護於 `web-preview/version.js`；每次釋出更新時，必須先更新該檔案，桌面 App 與瀏覽器預覽會同步顯示。
+
+2026-10-08 V1.4：範本庫改為「建立空白提示詞／內建範本／已儲存的提示詞」三區；自己的範本可建立群組並拖曳分類。專案頁新增「AI 輸出項目」，並在檔名下方顯示用途。文件編輯改為章節式草稿與差異預覽，健檢改成資料夾卡片與問題卡片，設定頁加入 Gemini API 狀態與本機 Key 管理。
+
+2026-10-08 更新：四個分頁為提示詞工作台、專案、記憶健檢、設定。新增簡明用量提示、四類文件分組、章節編輯、逐行健檢與選用 Gemini 分析。操作方式、限制及固定驗收流程請見 [V1.4 更新與測試說明](docs/revision-2.1.md)。
 
 本專案以 macOS 桌面 App 為主要使用情境，核心功能在本機離線執行，不需要 API Key，也不會為了整理內容額外消耗 AI Token。
 
-![AI Prompt Studio 工作台](docs/evidence/interfaces/01-prompt-workbench.png)
+### 範本與選用 AI 分析（2026-10-08）
+
+提示詞庫內建 6 個可套用範本：功能開發、除錯、白話摘要、研究整理、會議待辦與交付驗收。點選後修改方括號內容，再按「儲存版本」保存自己的副本。「建立空白提示詞」只開始新草稿，不會直接新增資料。
+
+若希望由 AI 提出任務拆解與用量節省建議：
+
+1. 到 [Google AI Studio](https://aistudio.google.com/apikey) 申請自己的 API Key，確認模型與帳號仍適用免費額度；不要把 Key 貼到聊天室。
+2. 在桌面 App「設定 → AI 輔助分析」以密碼欄貼入 Key 與模型 ID，按「測試並啟用」。預填 `gemini-3.5-flash-lite`，可依帳號可用模型修改。
+3. 在工作台選 Codex 或 Claude Code，展開「請 AI 分析任務」，檢查草稿後確認送出。
+
+Key 只存在目前 macOS 使用者的 App Support 本機私有檔，不會寫入 SQLite、專案檔或 `.app`；複製 App 到其他 Mac 或帳號時不會帶出 Key。只送目前草稿與工具名稱，不上傳專案文件、路徑或用量資料；AI 只能評估草稿，不能精確預測整個專案的 Token 或月費剩餘額度。瀏覽器預覽不接受真實 Key、不呼叫 API。
+
+Gemini 免費服務可能使用輸入改善產品，請勿傳送機密。已啟用計費的帳號可能產生費用；App 不會驗證免費資格，也不自動開通付費。參考 [官方價格與資料使用](https://ai.google.dev/gemini-api/docs/pricing)、[API 限額](https://ai.google.dev/gemini-api/docs/rate-limits)。[Groq](https://console.groq.com/docs/rate-limits) 也提供有限免費額度，可作為未來替代服務，本版尚未接入。
+
+驗證：52 項 Python 測試、28 組分頁版面檢查及桌面 WebView API 操作流程。API 測試採模擬回應；尚未使用真實 Key 進行雲端端到端驗證。
+
+![AI Prompt Studio 工作台](docs/evidence/revision-21/prompts-1440.png)
 
 ## 專案目標
 
@@ -26,7 +48,7 @@ AI Prompt Studio 將上述流程整理成視覺化介面，讓使用者能以較
 - 提供一般問答、內容創作、程式開發與資料分析等引導情境。
 - 保存版本紀錄，可查看舊版本並復原。
 - 支援 Markdown 匯入與匯出。
-- 使用本機 tokenizer 估算 `o200k_base` 與 `cl100k_base` Token 數量。
+- 透過工具選單顯示文件負擔等級與模型／月費方案參考；進階整理使用本機 tokenizer 比較文字長度。
 - 顯示可選的重複條列與格式精簡建議，不宣稱取代 LLM 的語意改寫。
 
 ### 專案與 Agent 記憶管理
@@ -35,9 +57,9 @@ AI Prompt Studio 將上述流程整理成視覺化介面，讓使用者能以較
 - 正式支援 Codex、Claude Code、Gemini CLI 與 OpenClaw。
 - 辨識 `AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`MEMORY.md` 等原生檔案。
 - 顯示檔案作用域與目前目錄可能載入的記憶順序。
-- 使用結構化表單離線產生 Markdown 模組。
+- 依核心記憶、專案提示詞、專案技能與 AI 輸出項目分組，提供全文與章節編輯。
 - 提供 Markdown 預覽與 unified diff。
-- 只更新 App 管理的區段，保留使用者手寫內容。
+- 快速編輯只更新選定章節；全文修改必須預覽確認後才寫入。
 
 ### 安全寫回與健檢
 
@@ -45,17 +67,17 @@ AI Prompt Studio 將上述流程整理成視覺化介面，讓使用者能以較
 - 使用暫存檔與 atomic replace，降低檔案損壞風險。
 - 寫入前建立備份，支援變更歷史與復原。
 - 防止路徑穿越與根目錄外的 symlink 存取。
-- 檢查錯誤檔名、空白模組、內容膨脹與疑似敏感資料。
+- 檢查疑似敏感資料、攻擊指令、重複內容及待補文字，並標記原文行號；結果需人工確認。
 
 ## 介面預覽
 
-| Prompt 工作台 | 專案地圖 |
+| Prompt 工作台 | 提示詞一覽表 |
 | --- | --- |
-| ![Prompt 工作台](docs/evidence/interfaces/01-prompt-workbench.png) | ![專案地圖](docs/evidence/interfaces/02-project-map.png) |
+| ![Prompt 工作台](docs/evidence/revision-21/prompts-1440.png) | ![提示詞一覽表](docs/evidence/revision-21/projects-1440.png) |
 
-| 記憶編程 | 記憶健檢 |
+| 文件編輯 | 記憶健檢 |
 | --- | --- |
-| ![記憶編程](docs/evidence/interfaces/03-memory-programming.png) | ![記憶健檢](docs/evidence/interfaces/04-memory-health.png) |
+| ![文件編輯](docs/evidence/revision-21/editor-1440.png) | ![記憶健檢](docs/evidence/revision-21/health-1440.png) |
 
 ## 系統需求
 
@@ -78,7 +100,7 @@ AI Prompt Studio 將上述流程整理成視覺化介面，讓使用者能以較
 
 ### 方法一：下載已打包的 macOS 測試版
 
-1. 下載 [`deliverables/AI Prompt Studio Next.zip`](deliverables/AI%20Prompt%20Studio%20Next.zip)。
+1. 下載 [`deliverables/AI Prompt Studio Next V1.4.zip`](deliverables/AI%20Prompt%20Studio%20Next%20V1.4.zip)。
 2. 解壓縮後取得 `AI Prompt Studio Next.app`。
 3. 將 App 移動到「應用程式」資料夾，或直接在目前位置執行。
 4. 第一次開啟若被 macOS 阻擋，請在 Finder 對 App 按右鍵，選擇「打開」，再確認一次。
@@ -111,13 +133,13 @@ PYTHONPATH=src python run_legacy_app.py
 
 ## 基本操作流程
 
-1. 開啟 App，建立或選擇 Prompt 專案。
-2. 在 Prompt 工作台新增標題、分類、標籤與內容。
-3. 選擇引導情境，依欄位補齊角色、任務、限制與輸出格式。
-4. 查看 Token 估算與精簡候選，再保存新版本。
-5. 若要管理 Agent 記憶，進入「專案」並選擇本機專案資料夾。
-6. 在「記憶編程」選擇 Agent、目標檔案與模組，填寫表單後產生預覽。
-7. 檢查 Diff，確認後再套用到 Markdown 檔案。
+1. 開啟 App，在提示詞工作台建立空白草稿，或套用內建範本。
+2. 修改標題、分類、標籤與提示詞內容，再按「儲存版本」保存自己的範本。
+3. 需要整理時可查看 Token 與輸入負擔；若已設定 Gemini Key，可手動確認送出草稿請 AI 分析。
+4. 若要管理專案 Markdown，進入「專案」並選擇本機專案資料夾。
+5. 在提示詞一覽表查看核心記憶、專案提示詞、專案技能與 AI 輸出項目。
+6. 點選檔案後使用編輯器修改章節或全文，先檢查差異再確認寫入。
+7. 到「記憶健檢」查看疑似敏感資料、覆寫指令、重複內容、TODO 與行號提示。
 8. 可從變更歷史查看備份或復原內容。
 
 ## 瀏覽器 UI 預覽
@@ -173,7 +195,7 @@ PYTHONPATH=src pytest -q
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-目前驗收涵蓋資料庫 migration、Markdown compiler、安全寫回、外部修改偵測、備份復原、路徑穿越防護與四種 Agent 規格。
+目前驗收涵蓋資料庫 migration、提示詞群組、Gemini API 設定、Markdown compiler、安全寫回、外部修改偵測、備份復原、路徑穿越防護、健檢行號與四種 Agent 規格。
 
 ## 打包 macOS App
 
@@ -204,7 +226,7 @@ SQLite 資料庫預設儲存在：
 ```
 
 - 核心功能可完全離線使用。
-- App 不會把 API Key 寫入記憶檔或 SQLite。
+- App 不會把 API Key 寫入記憶檔或 SQLite；選用 Key 只保留於目前 macOS 使用者的 App Support 本機私有檔。
 - 使用者必須主動選擇專案根目錄，App 才會讀取其中的 Markdown。
 - 瀏覽器示範版不會存取真實專案資料夾。
 
@@ -212,7 +234,7 @@ SQLite 資料庫預設儲存在：
 
 ## 專題文件
 
-- [完整企劃書](docs/專題企劃書.md)
+- [V1.4 精簡企劃書](docs/專題企劃書.md)
 - [可編輯企劃書 Word](output/word/AI提示詞視覺化管理App_完整企劃書.docx)
 - [精簡易讀版企劃書 Word](output/word/AI提示詞視覺化管理App_完整企劃書_精簡易讀版.docx)
 - [企劃書 PDF](output/pdf/AI提示詞視覺化管理App_完整企劃書.pdf)
@@ -242,9 +264,9 @@ SQLite 資料庫預設儲存在：
 
 不一定。App 計算的是純文字 tokenizer 結果，不包含聊天訊息封裝、工具呼叫、圖片、模型輸出與各平台額外計費項目，應視為輸入內容的比較依據。
 
-### 是否一定要設定 OpenAI API Key？
+### 是否一定要設定 Gemini API Key？
 
-不需要。Prompt 管理、Token 估算、記憶編程、Diff、健檢、備份與復原都可以離線使用。
+不需要。Prompt 管理、Token 估算、章節編輯、Diff、健檢、備份與復原都可以離線使用。
 
 ## 已知限制
 

@@ -13,7 +13,7 @@ from docx.shared import Cm, Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output" / "word" / "AI提示詞視覺化管理App_完整企劃書_精簡易讀版.docx"
-EVIDENCE = ROOT / "docs" / "evidence" / "interfaces"
+EVIDENCE = ROOT / "docs" / "evidence" / "revision-21"
 
 FONT_LATIN = "Arial"
 FONT_CJK = "PingFang TC"
@@ -264,29 +264,29 @@ def build():
     p = doc.add_paragraph(style="Subtitle")
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     set_run(p.add_run("專題企劃書 精簡易讀版"), 14, False, ACCENT)
-    add_text(doc, "把散落的 Prompt 集中管理，並在本機查看版本、Token 與 Agent 記憶。",
+    add_text(doc, "把散落的 Prompt 集中管理，並在本機查看版本、Token、專案記憶與選用 AI 分析。",
              size=12, align=WD_ALIGN_PARAGRAPH.CENTER, after=12)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run().add_picture(str(EVIDENCE / "01-prompt-workbench.png"), width=Inches(5.7))
+    p.add_run().add_picture(str(EVIDENCE / "prompts-1440.png"), width=Inches(5.7))
     add_text(doc, "學生：____________　系級：____________　指導老師：____________",
              size=10.5, align=WD_ALIGN_PARAGRAPH.CENTER, before=8, after=3)
-    add_text(doc, "版本 2.0　2026 年 10 月", size=9.5, color=MUTED,
+    add_text(doc, "版本 V1.4　2026 年 10 月", size=9.5, color=MUTED,
              align=WD_ALIGN_PARAGRAPH.CENTER, after=0)
     page_break(doc)
 
     # Quick overview
     doc.add_heading("一分鐘看懂這個專題", level=1)
-    add_text(doc, "這是一套給學生與個人開發者使用的本機工具。它把 Prompt 與 AI 記憶檔集中在專案中，減少找不到版本、內容重複與修改後無法復原的問題。", size=12, after=9)
+    add_text(doc, "這是一套給學生與個人開發者使用的本機工具。它把 Prompt、Markdown 與 AI 記憶檔集中在專案中，減少找不到版本、檔案作用不清楚與修改後無法復原的問題。", size=12, after=9)
     add_table(doc, ["使用者現在遇到的問題", "App 提供的做法"], [
         ("Prompt 散落在聊天與筆記裡", "依專案分類、搜尋並保存版本"),
-        ("不知道 Prompt 是否缺少必要資訊", "用角色、任務、限制與輸出格式引導填寫"),
-        ("內容變長，卻看不到 Token 影響", "在本機比較原文、候選與 Token 數"),
-        ("AGENTS.md 等記憶檔不容易理解", "顯示作用域，用表單產生內容並預覽 Diff"),
+        ("不知道 Prompt 是否缺少必要資訊", "用範本、草稿與版本引導整理"),
+        ("內容變長，卻看不到輸入負擔", "在本機顯示 Token 與用量等級"),
+        ("AGENTS.md 等記憶檔不容易理解", "顯示檔案用途、資料夾分組與健檢問題"),
     ], widths=[7.8, 9.2], font_size=10)
     doc.add_heading("核心操作", level=2)
-    add_flow(doc, ["選擇專案", "整理 Prompt", "檢查 Token", "保存或匯出"])
-    add_text(doc, "核心功能離線運作，不需要 API Key。App 不會自動替使用者決定是否刪除內容，所有修改都能先預覽。", size=10.5, color=MUTED, before=5)
+    add_flow(doc, ["選擇專案", "整理 Prompt", "檢查負擔", "保存版本"])
+    add_text(doc, "核心功能離線運作，不需要 API Key。Gemini 分析是選用功能，只有使用者確認後才會送出目前草稿。", size=10.5, color=MUTED, before=5)
     page_break(doc)
 
     # Audience and goals
@@ -294,42 +294,43 @@ def build():
     add_table(doc, ["使用者", "最常遇到的情況", "App 能幫上什麼"], [
         ("學生", "研究、報告與課業 Prompt 很多", "依課程或題目分類，快速找回最後版本"),
         ("個人開發者", "程式審查與開發指令重複使用", "比較版本、Token 與 Markdown 輸出"),
-        ("小型團隊成員", "專案規則與 Agent 記憶不透明", "查看檔案作用域與可能載入順序"),
+        ("小型團隊成員", "專案規則與 Agent 記憶不透明", "查看檔案作用域、用途與健檢問題"),
     ], widths=[3.2, 6.8, 7.0], font_size=9.8)
-    doc.add_heading("這次要做到的四件事", level=2)
+    doc.add_heading("V1.4 要做到的五件事", level=2)
     add_bullets(doc, [
         "把 Prompt 依專案集中管理，支援搜尋、標籤與版本。",
-        "用結構化欄位協助初學者補齊必要資訊。",
-        "顯示純文字 Token、精簡候選與輸入成本情境。",
-        "安全管理 Agent 記憶檔，保留 Diff、備份與復原。",
+        "用內建範本與自己的範本協助建立草稿。",
+        "顯示純文字 Token 與輸入負擔，不宣稱等於實際帳單。",
+        "依核心記憶、專案提示詞、專案技能與 AI 輸出項目分組。",
+        "安全管理 Markdown，保留差異預覽、備份與外部修改檢查。",
     ])
     doc.add_heading("不會做的事", level=2)
-    add_text(doc, "第一版不提供多人雲端協作，也不保證精簡後回答一定更好。規則式整理只處理可解釋的格式與重複內容，品質仍需實驗驗證。", size=10.8)
+    add_text(doc, "V1.4 不提供多人雲端協作，不保證 AI 回答品質提升，也不會自動套用 Gemini 分析結果。所有檔案寫入仍需使用者預覽與確認。", size=10.8)
     page_break(doc)
 
     # Prompt workbench
     doc.add_heading("主要功能一 Prompt 工作台", level=1)
-    add_picture(doc, "01-prompt-workbench.png", "圖 1　左側找 Prompt，中間編輯，右側比較 Token 與候選內容。", width=6.45)
+    add_picture(doc, "prompts-1440.png", "圖 1　提示詞工作台整合空白草稿、內建範本、已儲存提示詞與輸入負擔提示。", width=6.45)
     add_table(doc, ["功能", "用途"], [
-        ("專案與搜尋", "用分類、標籤與關鍵字快速找回內容"),
-        ("引導式編寫", "提醒使用者填入角色、任務、限制與輸出格式"),
+        ("範本與群組", "建立空白草稿、套用內建範本，自己的範本可拖曳分類"),
         ("版本紀錄", "每次儲存建立新版本，可帶回舊內容再編輯"),
-        ("Token 分析", "比較原文與候選，不把純文字 Token 當成完整帳單"),
+        ("輸入負擔", "顯示 Token 與低、中、高等級，不把估算當完整帳單"),
+        ("選用 AI", "使用者同意後才送出草稿給 Gemini 分析"),
     ], widths=[4.2, 12.8], font_size=10)
     page_break(doc)
 
     # Project map and memory programming
-    doc.add_heading("主要功能二 專案與記憶編程", level=1)
-    add_picture(doc, "02-project-map.png", "圖 2　先確認專案裡有哪些 Markdown，以及哪些檔案會被 Agent 使用。", width=5.9)
-    add_picture(doc, "03-memory-programming.png", "圖 3　左側填寫結構化欄位，右側先看 Markdown 與 Diff，再決定是否寫入。", width=5.9)
-    add_text(doc, "第一版正式支援 Codex、Claude Code、Gemini CLI 與 OpenClaw。一般 Markdown 仍可查看，但不會被誤標成 Agent 自動記憶。", size=10.5, color=MUTED)
+    doc.add_heading("主要功能二 專案檔案與章節編輯", level=1)
+    add_picture(doc, "projects-1440.png", "圖 2　專案檔案依核心記憶、專案提示詞、專案技能與 AI 輸出項目分組。", width=5.9)
+    add_picture(doc, "editor-1440.png", "圖 3　編輯器可改章節、新增章節或進階全文修改，儲存前先看差異。", width=5.9)
+    add_text(doc, "一般 Markdown 可以查看與編輯，但不會被誤標成 Agent 自動記憶。企劃書、規格、展示指南與交付紀錄會集中到 AI 輸出項目。", size=10.5, color=MUTED)
     page_break(doc)
 
     # Health and sources
     doc.add_heading("主要功能三 記憶健檢與規格來源", level=1)
-    add_picture(doc, "04-memory-health.png", "圖 4　健檢顯示錯誤檔名、疑似敏感資料、內容長度與載入順序。", width=5.9)
-    add_picture(doc, "05-settings-sources.png", "圖 5　設定頁列出支援工具、規格版本、查證日期與官方來源。", width=5.9)
-    add_text(doc, "健檢只提出問題，不會自動修改檔案。規格資料內建在 App 中，離線也能使用。", size=10.5, color=MUTED)
+    add_picture(doc, "health-1440.png", "圖 4　健檢依資料夾分組，右側以卡片顯示行號、類型與問題內容。", width=5.9)
+    add_picture(doc, "settings-1440.png", "圖 5　設定頁顯示版本、API 狀態、Gemini Key 設定與規格來源。", width=5.9)
+    add_text(doc, "健檢只提出問題，不會自動修改檔案。Gemini API Key 只保存在目前 macOS 使用者的 App Support 私有檔。", size=10.5, color=MUTED)
     page_break(doc)
 
     # Architecture and safety
@@ -337,8 +338,8 @@ def build():
     add_table(doc, ["層級", "使用技術", "負責工作"], [
         ("介面", "HTML、CSS、JavaScript", "Web 與 macOS App 共用同一套畫面"),
         ("桌面橋接", "pywebview", "讓 Web UI 呼叫本機 Python 功能"),
-        ("服務", "Python", "掃描專案、Token 計數、編譯、Diff 與檔案寫回"),
-        ("資料", "SQLite 與 Markdown", "保存 Prompt、版本、變更紀錄與專案檔案"),
+        ("服務", "Python", "掃描專案、Token 計數、健檢、Diff 與檔案寫回"),
+        ("資料", "SQLite、Markdown、本機私有設定", "保存 Prompt、版本、群組、專案檔案與 API Key 狀態"),
     ], widths=[3.0, 5.0, 9.0], font_size=9.8)
     doc.add_heading("安全寫回流程", level=2)
     add_flow(doc, ["產生預覽", "檢查 Diff", "比對雜湊", "備份後寫入"])
@@ -349,7 +350,7 @@ def build():
         "每次寫入前建立備份，之後可以查看紀錄或復原。",
     ], compact=True)
     doc.add_heading("Token 與成本怎麼看", level=2)
-    add_text(doc, "App 顯示選定 tokenizer 的純文字 Token。成本由使用者填入單價與呼叫次數後推算，不包含輸出、圖片、工具、快取、重試與稅。", size=10.5)
+    add_text(doc, "App 顯示選定 tokenizer 的純文字 Token 與輸入負擔等級。它沒有連接帳號額度、重置時間或完整帳單，因此不能宣稱一定省錢或一定夠用。", size=10.5)
     page_break(doc)
 
     # Evaluation
@@ -363,20 +364,20 @@ def build():
     ], widths=[4.0, 7.2, 5.8], font_size=9.5)
     doc.add_heading("研究順序", level=2)
     add_flow(doc, ["功能測試", "Token 測量", "真人試用", "品質比較"])
-    add_text(doc, "目前已完成工程測試與合成文本 Token 測量。真人可用性研究及模型輸出品質比較尚未執行，因此文件不宣稱已證明節省比例或品質等效。", size=10.5, color=MUTED, before=5)
+    add_text(doc, "目前已完成工程測試與 V1.4 Web/桌面 smoke test。真人可用性研究及模型輸出品質比較尚未執行，因此文件不宣稱已證明節省比例或品質等效。", size=10.5, color=MUTED, before=5)
     page_break(doc)
 
     # Scope, status and plan
     doc.add_heading("目前進度與後續安排", level=1)
     add_table(doc, ["狀態", "內容"], [
-        ("已完成", "共用 Web UI、macOS App、Prompt 工作台、記憶編程、健檢、SQLite、Token 分析與安全寫回"),
-        ("已驗證", "23 項自動測試、桌面 self-test、操作截圖、Word 與 PDF 文件"),
-        ("待完成", "真人可用性研究、模型品質比較、正式報告、簡報與展示影片"),
+        ("已完成", "共用 Web UI、macOS App、Prompt 工作台、群組、章節編輯、健檢、Gemini 設定與安全寫回"),
+        ("已驗證", "52 項 Python 測試、V1.4 Web/桌面 smoke test、操作截圖、Word 與 PDF 文件"),
+        ("待完成", "真人可用性研究、真實 Gemini API 帳號驗證、模型品質比較、正式報告與展示影片"),
     ], widths=[3.5, 13.5], font_size=10)
     doc.add_heading("八週建議時程", level=2)
     add_table(doc, ["週次", "工作", "交付內容"], [
         ("1", "確認題目與研究方法", "企劃與 Spec 定稿"),
-        ("2 至 3", "整理功能與回歸測試", "可操作 App"),
+        ("2 至 3", "整理功能與回歸測試", "V1.4 可操作 App"),
         ("4", "Token 基準與錯誤案例", "可重現數據"),
         ("5 至 6", "品質比較與可用性試測", "原始數據與限制"),
         ("7", "修正問題與完整驗收", "測試版本"),
@@ -408,25 +409,23 @@ def build():
         "正式期限、組員分工與展示方式。",
     ])
     doc.add_heading("給老師的簡短說明", level=2)
-    add_text(doc, "本專題以專案為單位管理 Prompt，提供引導式編寫、搜尋、版本、Token 分析與 Markdown 匯出，也能查看 Agent 記憶檔的作用範圍並安全寫回。目前已有可操作原型，下一步會用實驗確認整理效率、Token 變化與輸出品質。", size=11)
+    add_text(doc, "本專題以專案為單位管理 Prompt，提供範本、搜尋、版本、Token 輸入負擔、Markdown 章節編輯與記憶健檢，也能選用 Gemini 做草稿分析。目前已有 V1.4 可操作版本，下一步會用實驗確認整理效率、Token 變化與輸出品質。", size=11)
 
     # References
     doc.add_heading("參考資料", level=1)
-    add_text(doc, "以下資料用於企劃結構、需求規格、Prompt 管理與 Token 計數方法。查閱日期為 2026 年 9 月 25 日。", size=10.5, color=MUTED)
+    add_text(doc, "以下資料用於企劃結構、需求規格、Prompt 管理、Token 計數與 API 安全邊界。查閱日期為 2026 年 10 月 8 日。", size=10.5, color=MUTED)
     refs = [
-        "S1 國科會大專學生研究計畫申請表 清華大學公開版本",
-        "S2 CMU Project Proposal Guidelines",
-        "S3 ISO IEC IEEE 29148 2018 公開介紹",
-        "S4 Langfuse Prompt Management",
-        "S5 Promptfoo Introduction",
-        "S6 OpenAI tiktoken",
-        "S7 Anthropic Token Counting",
-        "S8 國立東華大學資訊管理學系專題製作相關規定",
-        "S9 南臺科技大學軟體工程教材 軟體需求規格書格式範例",
+        "S1 Langfuse Prompt Management",
+        "S2 Promptfoo Introduction",
+        "S3 OpenAI tiktoken",
+        "S4 Gemini API Pricing",
+        "S5 Gemini API Key Guide",
+        "S6 OWASP Prompt Injection Prevention Cheat Sheet",
+        "S7 ISO IEC IEEE 29148 2018 公開介紹",
     ]
     add_bullets(doc, refs, size=10.2, compact=True)
     doc.add_heading("一句話總結", level=2)
-    add_text(doc, "AI Prompt Studio 把 Prompt 與 Agent 記憶從散落文字，整理成可以搜尋、比較、預覽、備份與復原的本機工作流程。", size=12, bold=True, color=ACCENT)
+    add_text(doc, "AI Prompt Studio Next V1.4 把 Prompt、Markdown 與 Agent 記憶整理成可以搜尋、分類、預覽、健檢、備份與復原的本機工作流程。", size=12, bold=True, color=ACCENT)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)

@@ -1,5 +1,7 @@
 # AI Prompt Studio：軟體需求與技術規格
 
+> 2026-10-07 修訂：最新介面與驗收規格以 [revision-2.1.md](revision-2.1.md) 為準。移除獨立記憶編程導航及成本面板，改成文件編輯彈窗、簡明負擔提示與逐行健檢。以下 1.2 內容保留作為既有服務與資料相容性背景。
+
 版本：1.2｜同步日期：2026-09-26｜狀態：本機單人 MVP 桌面交付基準
 
 交付形式：`dist/AI Prompt Studio Next.app`。桌面版直接內嵌最終 `web-preview/`，不是另外重寫或只開外部網站；五個功能區（提示詞、專案、記憶編程、記憶健檢、設定）共用同一份前端。瀏覽器使用示範資料，App 使用 Python bridge、SQLite 與真實本機檔案。桌面包內附兩種 tokenizer 資料，核心執行不需要網路。
@@ -135,11 +137,15 @@ P0 為必要交付；P1 為保留的輔助能力；P2 為後續候選，不影�
 | archived | 0／1 | 可回復封存 |
 | created_at／updated_at | UTC ISO 字串 | 時間 |
 
+### prompt_groups
+
+欄位為 id、project_path、name、sort_order、created_at。群組名稱在同一專案路徑內唯一；既有提示詞的 `category` 即為所屬群組。拖曳不覆寫內容或版本，只更新所屬群組與更新時間。
+
 ### prompt_revisions
 
 欄位為 id、prompt_id、version、title、content、category、tags、created_at。prompt_id 對應 prompt_library；(prompt_id, version) 唯一。版本記錄完整文字快照，不是僅存 Diff。
 
-schema_migrations 新增版本 3。新表採 additive schema；舊 memory_items、memory_versions、prompt_templates、ai_processing_runs、memory_file_changes 均保留。舊提示詞資料未自動合併進新表，避免類別語意與專案對應不明；需要時可從舊入口匯出再匯入。
+schema_migrations 新增至版本 4。新表採 additive schema；舊 memory_items、memory_versions、prompt_templates、ai_processing_runs、memory_file_changes 均保留。舊提示詞資料未自動合併進新表，避免類別語意與專案對應不明；需要時可從舊入口匯出再匯入。
 
 初始化 settings 改為 INSERT OR IGNORE，避免每次啟動重置使用者設定。資料庫實際路徑保持相容；測試透過 AI_MEMORY_APP_DB_PATH 使用獨立 DB。
 
@@ -151,6 +157,9 @@ schema_migrations 新增版本 3。新表採 additive schema；舊 memory_items�
 |---|---|---|
 | list_prompts | project_path, query, category, archived | 提示詞列表 |
 | save_prompt | project_path, id?, version?, title, content, category, tags, archived | 新提示詞狀態與版本 |
+| list_prompt_groups | project_path | 群組清單 |
+| create_prompt_group | project_path, name | 建立群組 |
+| move_prompt_to_group | project_path, prompt_id, group_name | 更新範本所屬群組 |
 | list_prompt_versions | project_path, prompt_id | 歷史快照，版本倒序 |
 | analyze_prompt | content, encoding, input_price?, calls, remove_duplicates | 分析結果 |
 | preview_prompt_file | project_path, relative_path, content | original, compiled, exists, base_hash, diff |

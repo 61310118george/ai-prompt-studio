@@ -28,10 +28,9 @@ PYINSTALLER_CONFIG_DIR=.pyinstaller-cache PYTHONPATH=src .venv/bin/pyinstaller \
   --add-data "resources:resources" \
   run_app.py
 
-# Finder metadata can invalidate an otherwise valid ad-hoc bundle signature.
-for attribute in com.apple.FinderInfo com.apple.ResourceFork; do
-  xattr -d "$attribute" "dist/AI Prompt Studio Next.app" 2>/dev/null || true
-done
+# Finder metadata can be attached to nested bundle files and invalidate an
+# otherwise valid ad-hoc signature. This applies only to the newly built output.
+xattr -cr "dist/AI Prompt Studio Next.app" 2>/dev/null || true
 codesign --verify --deep --strict "dist/AI Prompt Studio Next.app"
 "dist/AI Prompt Studio Next.app/Contents/MacOS/AI Prompt Studio Next" --self-test
 

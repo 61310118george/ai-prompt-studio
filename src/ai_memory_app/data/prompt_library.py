@@ -5,6 +5,8 @@ from ..services.prompt_workbench import validate_text
 
 
 class PromptLibrary:
+    DEFAULT_GROUP = "一般"
+
     def __init__(self, db_path):
         self.db_path = db_path
 
@@ -41,3 +43,48 @@ class PromptLibrary:
     def history(self, project_path: str, item_id: int) -> list[dict]:
         with connect(self.db_path) as db:
             return [dict(row) for row in db.execute("SELECT r.* FROM prompt_revisions r JOIN prompt_library p ON p.id=r.prompt_id WHERE p.project_path=? AND p.id=? ORDER BY r.version DESC", (project_path, item_id)).fetchall()]
+
+    def groups(self, project_path: str) -> list[dict]:
+        with connect(self.db_path) as db:
+            explicit = [dict(row) for row in db.execute(
+                "SELECT name, sort_order FROM prompt_groups WHERE project_path=? ORDER BY sort_order, name COLLATE NOCASE",
+                (project_path,),
+            ).fetchall()]
+            used = [str(row["category"]) for row in db.execute(
+                "SELECT DISTINCT category FROM prompt_library WHERE project_path=? AND archived=0 ORDER BY category COLLATE NOCASE",
+                (project_path,),
+            ).fetchall()]
+        names = [item["name"] for item in explicit]
+        for name in used:
+            if name not in names:
+                names.append(name)
+        if self.DEFAULT_GROUP not in names:
+            names.append(self.DEFAULT_GROUP)
+        return [{"name": name, "sort_order": index} for index, name in enumerate(names)]
+
+    def create_group(self, project_path: str, name: str) -> dict:
+        name = str(name or "").strip()
+        if not 1 <= len(name) <= 60:
+            raise ValueError("群組名稱請填寫 1–60 字。")
+        with connect(self.db_path) as db:
+            existing = db.execute("SELECT 1 FROM prompt_groups WHERE project_path=? AND name=?", (project_path, name)).fetchone()
+            if existing:
+                raise ValueError("已有相同名稱的群組。")
+            order = db.execute("SELECT COALESCE(MAX(sort_order), -1) + 1 AS value FROM prompt_groups WHERE project_path=?", (project_path,)).fetchone()["value"]
+            now = utc_now()
+            db.execute("INSERT INTO prompt_groups(project_path,name,sort_order,created_at) VALUES(?,?,?,?)", (project_path, name, order, now))
+        return {"name": name, "sort_order": order}
+
+    def move_to_group(self, project_path: str, item_id: int, group_name: str) -> dict:
+        group_name = str(group_name or "").strip()
+        if not 1 <= len(group_name) <= 60:
+            raise ValueError("群組名稱請填寫 1–60 字。")
+        with connect(self.db_path) as db:
+            item = db.execute("SELECT * FROM prompt_library WHERE id=? AND project_path=?", (item_id, project_path)).fetchone()
+            if item is None:
+                raise ValueError("找不到要移動的提示詞。")
+            if not db.execute("SELECT 1 FROM prompt_groups WHERE project_path=? AND name=?", (project_path, group_name)).fetchone():
+                order = db.execute("SELECT COALESCE(MAX(sort_order), -1) + 1 AS value FROM prompt_groups WHERE project_path=?", (project_path,)).fetchone()["value"]
+                db.execute("INSERT INTO prompt_groups(project_path,name,sort_order,created_at) VALUES(?,?,?,?)", (project_path, group_name, order, utc_now()))
+            db.execute("UPDATE prompt_library SET category=?, updated_at=? WHERE id=?", (group_name, utc_now(), item_id))
+            return dict(db.execute("SELECT * FROM prompt_library WHERE id=?", (item_id,)).fetchone())

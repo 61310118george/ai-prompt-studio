@@ -1,0 +1,3 @@
+// The single release value shown in the desktop App and browser preview.
+// Update this value as part of every released App change.
+export const APP_VERSION = 'V1.4';

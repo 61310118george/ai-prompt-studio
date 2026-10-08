@@ -248,7 +248,7 @@ def add_cover(doc, title, subtitle, version_line):
     table.autofit = False
     table.columns[0].width = Cm(6)
     table.columns[1].width = Cm(6)
-    for index, value in enumerate(("專題文件", "2026 09 26")):
+    for index, value in enumerate(("專題文件", "2026 10 08")):
         cell = table.cell(0, index)
         set_cell_shading(cell, "F0E4D9")
         set_cell_margins(cell, 180, 160, 180, 160)
@@ -405,9 +405,9 @@ def build(source_name, output_name, title, subtitle, version):
 if __name__ == "__main__":
     build("專題企劃書.md", "AI提示詞視覺化管理App_完整企劃書.docx",
           "AI 提示詞視覺化管理 App",
-          "本機提示詞管理 Token 分析與 Agent 記憶視覺化",
-          "版本 1.2　完整企劃書與操作介面")
+          "本機提示詞管理 專案記憶與 Token 輸入負擔",
+          "版本 V1.4　精簡企劃書與操作介面")
     build("SPEC.md", "AI提示詞視覺化管理App_軟體需求規格書.docx",
           "AI Prompt Studio",
           "軟體需求與技術規格書",
-          "版本 1.2　功能需求 介面 資料 API 安全與驗收")
+          "版本 V1.4　功能需求 介面 資料 API 安全與驗收")
