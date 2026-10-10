@@ -8,9 +8,9 @@ import difflib
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ai_memory_app.data.database import APP_SUPPORT_DIR
 from ai_memory_app.data.repository import MemoryRepository
 from ai_memory_app.data.prompt_library import PromptLibrary
+from ai_memory_app.platform_paths import get_backup_dir
 
 from .agent_catalog import get_file_type, load_agent_catalog
 from .memory_compiler import compile_memory_module, content_hash
@@ -19,13 +19,29 @@ from .project_scanner import scan_project
 from .prompt_workbench import analyze_prompt, validate_text
 from .cloud_advisor import CloudAdvisor
 
+LOCAL_PROMPT_SCOPE = "__local_prompt_library__"
+WINDOWS_RESERVED_NAMES = {
+    "CON", "PRN", "AUX", "NUL",
+    *(f"COM{number}" for number in range(1, 10)),
+    *(f"LPT{number}" for number in range(1, 10)),
+}
+
+
+def safe_export_filename(title: str) -> str:
+    forbidden = '<>:"/\\|?*'
+    name = "".join("-" if char in forbidden or ord(char) < 32 else char for char in str(title))
+    name = name.strip(". ")[:80].rstrip(". ")
+    if name.upper() in WINDOWS_RESERVED_NAMES:
+        name = f"_{name}"
+    return name or "my-prompt"
+
 
 class DesktopApi:
     def __init__(self, repository: MemoryRepository, window=None, backup_root: Path | None = None) -> None:
         self.repository = repository
         self.window = window
         self.allowed_root: Path | None = None
-        self.backup_root = backup_root or (APP_SUPPORT_DIR / "backups")
+        self.backup_root = backup_root or get_backup_dir()
         self.prompts = PromptLibrary(repository.db_path)
         self._cloud_advisor = CloudAdvisor()
 
@@ -37,6 +53,9 @@ class DesktopApi:
 
     def analyze_with_ai(self, request):
         return self._safe_call(lambda: self._cloud_advisor.analyze(request))
+
+    def optimize_with_ai(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.optimize(request))
 
     def attach_window(self, window) -> None:
         self.window = window
@@ -64,6 +83,11 @@ class DesktopApi:
         if not project.is_dir() or not project.is_relative_to(self.allowed_root):
             raise ValueError("專案不在已授權的根目錄內。")
         return project
+
+    def _prompt_scope(self, value: str) -> str:
+        if value == LOCAL_PROMPT_SCOPE:
+            return LOCAL_PROMPT_SCOPE
+        return str(self._project_path(value))
 
     def _target_path(self, project: Path, relative_path: str, *, must_exist: bool = False) -> Path:
         if not relative_path or Path(relative_path).is_absolute() or Path(relative_path).suffix.lower() != ".md":
@@ -103,13 +127,63 @@ class DesktopApi:
     def choose_project_root(self) -> dict:
         def choose():
             if self.window is None:
-                raise ValueError("瀏覽器預覽模式請使用示範資料，或在桌面 App 選擇資料夾。")
+                raise ValueError("桌面視窗尚未就緒，請重新啟動 App。")
             import webview
             selected = self.window.create_file_dialog(webview.FOLDER_DIALOG)
             if not selected:
                 return None
             raw = selected[0] if isinstance(selected, (list, tuple)) else selected
             return str(self._authorize_root(str(raw)))
+        return self._safe_call(choose)
+
+    def import_prompt_file(self) -> dict:
+        def choose():
+            if self.window is None:
+                raise ValueError("本機檔案匯入僅提供桌面 App 使用。")
+            import webview
+            selected = self.window.create_file_dialog(
+                webview.OPEN_DIALOG,
+                allow_multiple=False,
+                file_types=("Markdown (*.md)",),
+            )
+            if not selected:
+                return None
+            raw = selected[0] if isinstance(selected, (list, tuple)) else selected
+            target = Path(str(raw)).expanduser().resolve(strict=True)
+            if not target.is_file() or target.suffix.lower() != ".md":
+                raise ValueError("請選擇 Markdown（.md）檔案。")
+            if target.stat().st_size > 2_000_000:
+                raise ValueError("檔案超過 2 MB，請先拆分後再匯入。")
+            content = validate_text(target.read_text(encoding="utf-8"))
+            return {"name": target.stem, "filename": target.name, "path": str(target), "content": content}
+        return self._safe_call(choose)
+
+    def export_prompt_file(self, title: str, content: str) -> dict:
+        def choose():
+            if self.window is None:
+                raise ValueError("本機檔案匯出僅提供桌面 App 使用。")
+            compiled = validate_text(content)
+            if not compiled.strip():
+                raise ValueError("不允許匯出空白提示詞。")
+            filename = f"{safe_export_filename(title)}.md"
+            import webview
+            selected = self.window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                allow_multiple=False,
+                save_filename=filename,
+                file_types=("Markdown (*.md)",),
+            )
+            if not selected:
+                return None
+            raw = selected[0] if isinstance(selected, (list, tuple)) else selected
+            target = Path(str(raw)).expanduser()
+            if target.suffix.lower() != ".md":
+                target = target.with_suffix(".md")
+            target = target.resolve(strict=False)
+            if target.exists() and not target.is_file():
+                raise ValueError("選擇的位置不是可寫入的檔案。")
+            self._atomic_write(target, compiled)
+            return {"filename": target.name, "path": str(target), "bytes": len(compiled.encode("utf-8"))}
         return self._safe_call(choose)
 
     def set_project_root(self, root: str) -> dict:
@@ -147,22 +221,43 @@ class DesktopApi:
         return self._response(load_agent_catalog())
 
     def list_prompts(self, project_path: str, query: str = "", category: str = "", archived: bool = False) -> dict:
-        return self._safe_call(lambda: self.prompts.list(str(self._project_path(project_path)), query, category, archived))
+        return self._safe_call(lambda: self.prompts.list(self._prompt_scope(project_path), query, category, archived))
 
     def save_prompt(self, request: dict) -> dict:
-        return self._safe_call(lambda: self.prompts.save(str(self._project_path(request["project_path"])), request))
+        return self._safe_call(lambda: self.prompts.save(self._prompt_scope(request["project_path"]), request))
 
     def list_prompt_versions(self, project_path: str, prompt_id: int) -> dict:
-        return self._safe_call(lambda: self.prompts.history(str(self._project_path(project_path)), prompt_id))
+        return self._safe_call(lambda: self.prompts.history(self._prompt_scope(project_path), prompt_id))
 
     def list_prompt_groups(self, project_path: str) -> dict:
-        return self._safe_call(lambda: self.prompts.groups(str(self._project_path(project_path))))
+        return self._safe_call(lambda: self.prompts.groups(self._prompt_scope(project_path)))
 
     def create_prompt_group(self, project_path: str, name: str) -> dict:
-        return self._safe_call(lambda: self.prompts.create_group(str(self._project_path(project_path)), name))
+        return self._safe_call(lambda: self.prompts.create_group(self._prompt_scope(project_path), name))
 
     def move_prompt_to_group(self, project_path: str, prompt_id: int, group_name: str) -> dict:
-        return self._safe_call(lambda: self.prompts.move_to_group(str(self._project_path(project_path)), prompt_id, group_name))
+        return self._safe_call(lambda: self.prompts.move_to_group(self._prompt_scope(project_path), prompt_id, group_name))
+
+    def list_prompt_template_preferences(self, project_path: str) -> dict:
+        return self._safe_call(lambda: self.prompts.template_preferences(self._prompt_scope(project_path)))
+
+    def list_prompt_card_order(self, project_path: str) -> dict:
+        return self._safe_call(lambda: self.prompts.card_order(self._prompt_scope(project_path)))
+
+    def place_prompt_card(self, project_path: str, card_key: str, group_name: str, ordered_card_keys: list[str]) -> dict:
+        return self._safe_call(lambda: self.prompts.place_card(self._prompt_scope(project_path), card_key, group_name, ordered_card_keys))
+
+    def set_prompt_template_preference(self, project_path: str, template_key: str, category: str, hidden: bool = False) -> dict:
+        return self._safe_call(lambda: self.prompts.set_template_preference(self._prompt_scope(project_path), template_key, category, hidden))
+
+    def reset_prompt_template_preferences(self, project_path: str) -> dict:
+        return self._safe_call(lambda: self.prompts.reset_template_preferences(self._prompt_scope(project_path)))
+
+    def delete_prompt_group(self, project_path: str, name: str, builtin_template_keys: list[str] | None = None) -> dict:
+        return self._safe_call(lambda: self.prompts.delete_group(self._prompt_scope(project_path), name, builtin_template_keys))
+
+    def delete_prompt(self, project_path: str, prompt_id: int) -> dict:
+        return self._safe_call(lambda: self.prompts.delete(self._prompt_scope(project_path), prompt_id))
 
     def analyze_prompt(self, request: dict) -> dict:
         return self._safe_call(lambda: analyze_prompt(request))

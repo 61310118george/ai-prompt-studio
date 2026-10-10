@@ -1,8 +1,4 @@
-"""Per-user local storage for optional third-party API credentials.
-
-The credential file lives outside the .app bundle, SQLite database and project
-folders. It is not copied when the app is shared with another macOS user or Mac.
-"""
+"""Per-user local storage for optional third-party API credentials."""
 from __future__ import annotations
 
 import json
@@ -10,14 +6,14 @@ import os
 import tempfile
 from pathlib import Path
 
-from ai_memory_app.data.database import APP_SUPPORT_DIR
+from ai_memory_app.platform_paths import get_credential_path
 
 
 class LocalCredentialStore:
-    """Store one user's optional API key in that user's Application Support."""
+    """Store one user's optional API key outside the app and project folders."""
 
     def __init__(self, path: Path | None = None) -> None:
-        self.path = path or (APP_SUPPORT_DIR / "local_api_credentials.json")
+        self.path = path or get_credential_path()
 
     def load(self) -> str:
         try:
@@ -37,14 +33,16 @@ class LocalCredentialStore:
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             descriptor, temporary_name = tempfile.mkstemp(prefix=".api-key-", suffix=".tmp", dir=self.path.parent)
-            os.fchmod(descriptor, 0o600)
+            if os.name != "nt":
+                os.fchmod(descriptor, 0o600)
             with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
                 descriptor = -1
                 json.dump({"gemini_api_key": secret}, handle, ensure_ascii=False)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_name, self.path)
-            os.chmod(self.path, 0o600)
+            if os.name != "nt":
+                os.chmod(self.path, 0o600)
         except OSError as exc:
             if descriptor >= 0:
                 os.close(descriptor)

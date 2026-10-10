@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>AI Prompt Studio · 提示詞視覺化管理</title>
+    <link rel="stylesheet" href="./styles.css?v=3">
+  </head>
+  <body>
+    <a class="skip-link" href="#mainContent">跳到主要內容</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主導航">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">AM</div>
+          <div><strong>AI Prompt Studio</strong><span>提示詞視覺化管理</span></div>
+        </div>
+        <nav class="nav-list" id="navList">
+          <button class="nav-button active" type="button" data-page="prompts" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg><span>提示詞工作台</span></button>
+          <button class="nav-button" type="button" data-page="projects" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6.5h6l2 2h10v10.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6.5Z"/><path d="M3 11h18"/></svg><span>專案</span></button>
+          <button class="nav-button" type="button" data-page="health" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 7.8 7.5 9.5 4.4-1.7 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>記憶健檢</span></button>
+          <button class="nav-button" type="button" data-page="settings" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg><span>設定</span></button>
+        </nav>
+        <div class="sidebar-status" aria-live="polite">
+          <div class="sidebar-status-row"><span class="sidebar-status-label">版本</span><strong id="appVersion">V1.0</strong></div>
+          <div class="sidebar-status-row"><span class="status-dot api-unconfigured" id="apiStatusDot" aria-hidden="true"></span><span class="status-text" id="apiStatusText">API：確認中</span></div>
+        </div>
+      </aside>
+
+      <main class="workspace" id="mainContent" tabindex="-1">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">本機整理 · 清楚管理 AI 指令</p>
+            <h1 id="pageTitle">提示詞工作台</h1>
+          </div>
+          <div class="root-control">
+            <div><span>專案根目錄</span><strong id="rootPathLabel">尚未選擇</strong></div>
+            <button class="button secondary" id="chooseRootButton" type="button">選擇資料夾</button>
+          </div>
+        </header>
+
+        <div class="global-message hidden" id="globalMessage" role="alert"></div>
+
+        <section class="page active" id="page-prompts" aria-labelledby="pageTitle"></section>
+
+        <section class="page" id="page-projects" aria-labelledby="pageTitle">
+          <div class="page-intro">
+            <div><h2>專案與記憶檔案</h2><p>先確認每個專案有哪些 Markdown，以及哪些會被 Agent 當成指令或記憶。</p></div>
+            <button class="button secondary" id="refreshProjectsButton" type="button" disabled>重新掃描</button>
+          </div>
+          <div class="project-layout">
+            <section class="panel project-list-panel" aria-labelledby="projectListTitle">
+              <div class="panel-heading"><div><span class="step">01</span><h3 id="projectListTitle">選擇專案</h3></div><span class="count" id="projectCount">0</span></div>
+              <div class="selection-list" id="projectList"><div class="empty-state">選擇根目錄後顯示專案。</div></div>
+            </section>
+            <section class="panel file-list-panel" aria-labelledby="fileListTitle">
+              <div class="panel-heading"><div><span class="step">02</span><h3 id="fileListTitle">提示詞一覽表</h3></div><span class="count" id="fileCount">0</span></div>
+              <div class="project-summary" id="projectSummary"></div>
+              <div class="file-table-wrap">
+                <table class="file-table">
+                  <thead><tr><th>檔案</th><th>辨識結果</th><th>大小</th><th><span class="sr-only">操作</span></th></tr></thead>
+                  <tbody id="fileTableBody"><tr><td colspan="4" class="empty-cell">尚未選擇專案。</td></tr></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="panel file-preview-panel" aria-labelledby="filePreviewTitle">
+              <div class="panel-heading"><div><span class="step">03</span><h3 id="filePreviewTitle">內容預覽</h3></div><button class="button secondary" id="editFileButton" disabled>編輯</button></div>
+              <div class="preview-path" id="previewPath">未選擇檔案</div>
+              <pre class="code-view muted" id="filePreview">從中間列表選擇 Markdown。</pre>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-programming" aria-labelledby="pageTitle">
+          <div class="page-intro">
+            <div><h2>記憶編程</h2><p>結構化輸入會由本機規則編譯成 Markdown；先預覽與檢查 Diff，再安全寫回。</p></div>
+            <div class="flow-steps" aria-label="操作流程"><span class="active">選檔</span><span>填寫</span><span>預覽</span><span>套用</span></div>
+          </div>
+          <div class="programming-layout">
+            <section class="panel compiler-panel">
+              <fieldset class="selector-grid">
+                <legend>記憶檔案</legend>
+                <label>Agent<select id="agentSelect"></select></label>
+                <label>原生檔案<select id="fileTypeSelect"></select></label>
+                <label class="wide">專案內路徑<input id="relativePathInput" type="text" autocomplete="off" spellcheck="false"></label>
+              </fieldset>
+              <div class="source-note" id="agentBehavior"></div>
+              <div class="module-heading"><div><h3>選擇記憶模組</h3><p>只顯示適用於目前檔案的模組。</p></div></div>
+              <div class="module-list" id="moduleList"></div>
+              <form id="moduleForm" class="module-form" novalidate></form>
+              <div class="sticky-actions">
+                <button class="button secondary" id="clearFormButton" type="button">清除欄位</button>
+                <button class="button primary" id="compileButton" type="button">產生預覽</button>
+              </div>
+            </section>
+            <section class="panel result-panel">
+              <div class="result-toolbar">
+                <div class="segmented" role="tablist" aria-label="輸出檢視">
+                  <button class="segment active" id="previewTab" role="tab" aria-selected="true" type="button">Markdown 預覽</button>
+                  <button class="segment" id="diffTab" role="tab" aria-selected="false" type="button">Diff</button>
+                </div>
+                <button class="button primary" id="applyButton" type="button" disabled>套用到檔案</button>
+              </div>
+              <div class="compiler-status" id="compilerStatus">填寫左側欄位後產生預覽。</div>
+              <div class="warning-list hidden" id="compileWarnings" role="status"></div>
+              <pre class="code-view result-code" id="compileOutput"># 等待產生內容</pre>
+              <div class="history-section">
+                <div class="panel-heading"><div><h3>最近變更</h3></div><button class="text-button" id="refreshHistoryButton" type="button">重新整理</button></div>
+                <div class="history-list" id="historyList"><div class="empty-state">尚無變更紀錄。</div></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-health" aria-labelledby="pageTitle">
+          <div class="page-intro">
+            <div><h2>記憶健檢</h2><p>選擇資料夾後自動檢查敏感資訊、攻擊指令與重複內容。點選檔案查看問題位置。</p></div>
+            <div class="inline-actions"><label class="hidden">Agent<select id="healthAgentSelect"></select></label><button class="button primary" id="runHealthButton" type="button">重新健檢</button></div>
+          </div>
+          <div class="stat-grid" id="healthStats">
+            <article class="stat-card"><span>敏感／錯誤</span><strong>—</strong></article><article class="stat-card"><span>風險待確認</span><strong>—</strong></article><article class="stat-card"><span>整理建議</span><strong>—</strong></article><article class="stat-card"><span>掃描文件</span><strong>—</strong></article>
+          </div>
+          <div class="health-layout">
+            <section class="panel"><div class="panel-heading"><h3>需要確認的文件</h3></div><div id="healthFiles" class="selection-list"><p class="empty-state">選擇資料夾後顯示結果。</p></div></section>
+            <section class="panel" id="healthPreview"><div class="health-preview-empty"><strong>尚未選擇檔案</strong><span>從左側選擇檔案，查看問題行。</span></div></section>
+          </div>
+          <p class="source-note" id="healthScope">掃描 Markdown 與技能文件，所有分析在本機進行。</p>
+          <p class="field-help">規則參考：<a href="https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Prompt Injection Prevention</a> · 查證 2026-10-07</p>
+        </section>
+
+        <section class="page" id="page-settings" aria-labelledby="pageTitle">
+          <div class="page-intro"><div><h2>設定</h2><p>管理選用的 AI 輔助分析服務與目前支援規格。</p></div></div>
+          <div class="settings-layout">
+            <section class="panel setting-card"><h3>Agent 規格目錄</h3><dl><div><dt>版本</dt><dd id="catalogVersion">—</dd></div><div><dt>最後查證</dt><dd id="catalogVerified">—</dd></div><div><dt>正式支援</dt><dd>Codex、Claude Code、Gemini CLI、OpenClaw</dd></div></dl></section>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js?v=3"></script>
+  </body>
+</html>

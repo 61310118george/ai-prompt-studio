@@ -10,12 +10,12 @@ from .services.desktop_api import DesktopApi
 
 
 def main() -> int:
-    """Launch the 2.0 shared Web UI inside a native macOS window."""
+    """Launch the shared Web UI inside a native desktop window."""
     if "--self-test" in sys.argv:
         from .services.agent_catalog import load_agent_catalog
         from .services.prompt_workbench import count_tokens
         report = {
-            "web_ui": (application_root() / "web-preview" / "prompt-workspace.js").exists(),
+            "web_ui": (application_root() / "web-ui" / "prompt-workspace.js").exists(),
             "agents": len(load_agent_catalog()["agents"]),
             "tokenizers": {name: count_tokens("hello world", name) for name in ("o200k_base", "cl100k_base")},
         }
@@ -30,7 +30,7 @@ def main() -> int:
     initialize_database(db_path)
     repository = MemoryRepository(db_path)
     api = DesktopApi(repository)
-    entrypoint = application_root() / "web-preview" / "index.html"
+    entrypoint = application_root() / "web-ui" / "index.html"
     if not entrypoint.exists():
         raise SystemExit(f"Web UI entrypoint is missing: {entrypoint}")
 

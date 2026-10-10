@@ -68,12 +68,47 @@ def test_minimal_payload_and_literal_response(advisor):
         assert req.full_url=='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent'
         payload=json.loads(req.data)
         assert set(payload)=={'systemInstruction','contents','generationConfig'}
-        assert payload['generationConfig']['maxOutputTokens']==1600
+        assert payload['generationConfig']['maxOutputTokens']==480
+        assert payload['generationConfig']['temperature']==0.2
+        assert '回覆只能有' in payload['systemInstruction']['parts'][0]['text']
+        assert '本機粗估提示詞輸入 Token：321' in payload['contents'][0]['parts'][0]['text']
         assert 'dummy-key' not in req.data.decode()
         return io.BytesIO(json.dumps({'candidates':[{'content':{'parts':[{'text':'hidden','thought':True},{'text':'<script>not executable</script>'}]},'finishReason':'MAX_TOKENS'}]}).encode())
     advisor._open=fake_open
-    result=advisor.analyze({'content':'整理筆記','tool':'claude','consent':True})
+    result=advisor.analyze({'content':'整理筆記','tool':'claude','consent':True,'estimated_tokens':321,'model_hint':'Sonnet 處理一般任務'})
     assert result['text']=='<script>not executable</script>' and result['truncated']
+
+
+def test_optimize_uses_analysis_and_returns_reviewable_diff(advisor):
+    original = '## 任務\n\n- 保留日期\n- 保留日期\n'
+    optimized = '## 任務\n\n- 保留日期\n- 使用繁體中文'
+
+    def fake_open(req, timeout):
+        assert timeout == 45
+        payload = json.loads(req.data)
+        assert payload['generationConfig'] == {'maxOutputTokens': 8192, 'temperature': 0.15}
+        assert '移除重複文字' in payload['systemInstruction']['parts'][0]['text']
+        sent = payload['contents'][0]['parts'][0]['text']
+        assert '<analysis>' in sent and original in sent
+        return io.BytesIO(json.dumps({'candidates': [{'content': {'parts': [{'text': optimized}]}}]}).encode())
+
+    advisor._open = fake_open
+    result = advisor.optimize({'content': original, 'analysis': '建議移除重複條列。', 'tool': 'codex', 'consent': True})
+    assert result['original'] == original
+    assert result['optimized'] == optimized
+    assert result['changed'] is True
+    assert '--- 優化前' in result['diff'] and '+++ 優化後' in result['diff']
+    assert '- 保留日期' in result['diff'] and '+- 使用繁體中文' in result['diff']
+
+
+def test_optimize_requires_completed_analysis_and_rejects_truncation(advisor):
+    with pytest.raises(ValueError, match='先完成'):
+        advisor.optimize({'content': '請整理內容', 'analysis': '', 'tool': 'codex', 'consent': True})
+    advisor._open = lambda *args, **kwargs: io.BytesIO(json.dumps({
+        'candidates': [{'content': {'parts': [{'text': '不完整'}]}, 'finishReason': 'MAX_TOKENS'}]
+    }).encode())
+    with pytest.raises(ValueError, match='不完整內容'):
+        advisor.optimize({'content': '請整理內容', 'analysis': '任務難度：低', 'tool': 'codex', 'consent': True})
 
 
 @pytest.mark.parametrize('code',[400,401,403,404,429,500,503,302])

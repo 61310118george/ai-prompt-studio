@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+RELEASE_VERSION="V1.0"
 
 if [ ! -x ".venv/bin/python" ]; then
   python3 -m venv .venv
@@ -24,7 +25,7 @@ PYINSTALLER_CONFIG_DIR=.pyinstaller-cache PYTHONPATH=src .venv/bin/pyinstaller \
   --osx-bundle-identifier "local.promptstudio.next" \
   --collect-all tiktoken \
   --paths src \
-  --add-data "web-preview:web-preview" \
+  --add-data "web-ui:web-ui" \
   --add-data "resources:resources" \
   run_app.py
 
@@ -34,4 +35,10 @@ xattr -cr "dist/AI Prompt Studio Next.app" 2>/dev/null || true
 codesign --verify --deep --strict "dist/AI Prompt Studio Next.app"
 "dist/AI Prompt Studio Next.app/Contents/MacOS/AI Prompt Studio Next" --self-test
 
+mkdir -p release
+ditto -c -k --sequesterRsrc --keepParent \
+  "dist/AI Prompt Studio Next.app" \
+  "release/AI Prompt Studio Next ${RELEASE_VERSION} macOS Apple Silicon.zip"
+
 echo "Built: $ROOT_DIR/dist/AI Prompt Studio Next.app"
+echo "Packaged: $ROOT_DIR/release/AI Prompt Studio Next ${RELEASE_VERSION} macOS Apple Silicon.zip"

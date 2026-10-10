@@ -1,25 +1,19 @@
 from __future__ import annotations
 
 import sqlite3
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ai_memory_app.platform_paths import get_app_data_dir, get_default_db_path
+
 
 APP_DIR = Path(__file__).resolve().parents[3]
-APP_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "AI Personal Memory Manager"
-DEFAULT_DB_PATH = APP_SUPPORT_DIR / "ai_memory_app.sqlite3"
+APP_SUPPORT_DIR = get_app_data_dir()
+DEFAULT_DB_PATH = get_default_db_path()
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
-def get_default_db_path() -> Path:
-    override = os.environ.get("AI_MEMORY_APP_DB_PATH")
-    if override:
-        return Path(override).expanduser()
-    return DEFAULT_DB_PATH
 
 
 SCHEMA_SQL = """
@@ -181,6 +175,26 @@ CREATE TABLE IF NOT EXISTS prompt_groups (
   UNIQUE(project_path, name)
 );
 
+CREATE TABLE IF NOT EXISTS prompt_template_preferences (
+  project_path TEXT NOT NULL,
+  template_key TEXT NOT NULL,
+  category TEXT NOT NULL,
+  hidden INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(project_path, template_key)
+);
+
+CREATE TABLE IF NOT EXISTS prompt_card_order (
+  project_path TEXT NOT NULL,
+  card_key TEXT NOT NULL,
+  group_name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(project_path, card_key)
+);
+CREATE INDEX IF NOT EXISTS idx_prompt_card_order_group
+  ON prompt_card_order(project_path, group_name, sort_order);
+
 CREATE INDEX IF NOT EXISTS idx_memory_items_main_area ON memory_items(main_area);
 CREATE INDEX IF NOT EXISTS idx_memory_items_category ON memory_items(category);
 CREATE INDEX IF NOT EXISTS idx_memory_items_enabled ON memory_items(enabled);
@@ -248,7 +262,7 @@ SEED_MEMORY_ITEMS = [
         "project_memory",
         "project_requirements",
         "第一版技術方向",
-        "macOS 桌面 App，使用 Python + PySide6 + SQLite；核心功能離線可用，AI API 為可選功能。",
+        "macOS 與 Windows 11 桌面 App，使用 Python、pywebview 與 SQLite；核心功能離線可用，AI API 為可選功能。",
         "mvp,tech",
     ),
     (
@@ -261,7 +275,8 @@ SEED_MEMORY_ITEMS = [
 ]
 
 
-def connect(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
+def connect(db_path: Path | None = None) -> sqlite3.Connection:
+    db_path = db_path or get_default_db_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
     connection.row_factory = sqlite3.Row
@@ -269,7 +284,8 @@ def connect(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     return connection
 
 
-def initialize_database(db_path: Path = DEFAULT_DB_PATH) -> None:
+def initialize_database(db_path: Path | None = None) -> None:
+    db_path = db_path or get_default_db_path()
     with connect(db_path) as connection:
         connection.executescript(SCHEMA_SQL)
         apply_migrations(connection)
@@ -298,6 +314,14 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
     connection.execute(
         "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (4, ?, ?)",
         ("Prompt library groups and drag-to-organize", utc_now()),
+    )
+    connection.execute(
+        "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (5, ?, ?)",
+        ("Project-scoped built-in prompt template preferences", utc_now()),
+    )
+    connection.execute(
+        "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (6, ?, ?)",
+        ("Persistent card order within prompt template groups", utc_now()),
     )
 
 

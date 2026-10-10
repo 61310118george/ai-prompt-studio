@@ -5,11 +5,13 @@
 
 # Python caches and local environments
 .venv/
+.venv-windows/
 __pycache__/
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
 .pyinstaller-cache/
+*.spec
 
 # Local runtime data and secrets
 .env
@@ -22,6 +24,7 @@ __pycache__/
 build/
 dist/
 tmp/
-
-# The distributable macOS app is committed as a zip in deliverables/.
-deliverables/*.app/
+release/
+docs/
+output/
+deliverables/
