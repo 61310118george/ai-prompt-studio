@@ -5,7 +5,7 @@ export function renderHealthPanel({result,bridge,project,esc,openEditor}) {
   document.querySelectorAll('#healthStats strong').forEach((n,i)=>n.textContent=stats[i]??0);
   document.querySelector('#healthScope').textContent=[result.scope_note,...(result.scan_warnings||[])].join(' ');
   list.replaceChildren();preview.innerHTML='<div class="health-preview-empty"><strong>尚未選擇檔案</strong><span>從左側選擇檔案，查看問題行。</span></div>';let epoch=0;
-  const projectName=String(project||'').split('/').filter(Boolean).pop()||'目前專案';
+  const projectName=String(project||'').replaceAll('\\','/').split('/').filter(Boolean).pop()||'目前專案';
   const grouped=new Map();
   for(const f of result.files||[]) {
     const parts=f.relative_path.split('/'); const fileName=parts.pop(); const folder=parts.length?parts.join('/'):'專案根目錄';
@@ -18,7 +18,7 @@ export function renderHealthPanel({result,bridge,project,esc,openEditor}) {
     for(const f of files) {
     const button=document.createElement('button');button.className='selection-item health-file';button.dataset.healthFile=f.relative_path;
     const groupId=fileGroup(f);
-    button.innerHTML=`<span class="health-file-main"><strong title="${esc(f.relative_path)}">${esc(f._fileName)}</strong><span class="health-file-meta"><small class="health-issue-count">${f.issues.length} 項待確認</small><small>最後更新時間：${esc(f.modified_at?new Date(f.modified_at).toLocaleString('zh-TW'):'示範資料')}</small></span></span><span class="health-type ${esc(groupId)}">${esc(GROUPS[groupId])}</span>`;
+    button.innerHTML=`<span class="health-file-main"><strong title="${esc(f.relative_path)}">${esc(f._fileName)}</strong><span class="health-file-meta"><small class="health-issue-count">${f.issues.length?`${f.issues.length} 項待確認`:'未發現問題'}</small><small>最後更新時間：${esc(f.modified_at?new Date(f.modified_at).toLocaleString('zh-TW'):'示範資料')}</small></span></span><span class="health-type ${esc(groupId)}">${esc(GROUPS[groupId])}</span>`;
     button.onclick=async()=>{const id=++epoch;try {
       list.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
       const response=await bridge.call('read_memory_file',project,f.relative_path);if(id!==epoch)return;
@@ -30,5 +30,5 @@ export function renderHealthPanel({result,bridge,project,esc,openEditor}) {
     group.append(button);
     }
   }
-  if(!list.childElementCount)list.innerHTML='<p class="empty-state">本次沒有命中檢查規則；不代表文件絕對安全。</p>';
+  if(!list.childElementCount)list.innerHTML=`<p class="empty-state">此資料夾未掃描到 Markdown。請確認選取位置、讀取權限與雲端檔案是否已下載。<br>${esc(project)}</p>`;
 }

@@ -18,11 +18,11 @@
         <nav class="nav-list" id="navList">
           <button class="nav-button active" type="button" data-page="prompts" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/></svg><span>提示詞工作台</span></button>
           <button class="nav-button" type="button" data-page="projects" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6.5h6l2 2h10v10.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6.5Z"/><path d="M3 11h18"/></svg><span>專案</span></button>
-          <button class="nav-button" type="button" data-page="health" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 7.8 7.5 9.5 4.4-1.7 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>記憶健檢</span></button>
+          <button class="nav-button" type="button" data-page="health" hidden aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 7.8 7.5 9.5 4.4-1.7 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>記憶健檢</span></button>
           <button class="nav-button" type="button" data-page="settings" aria-current="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg><span>設定</span></button>
         </nav>
         <div class="sidebar-status" aria-live="polite">
-          <div class="sidebar-status-row"><span class="sidebar-status-label">版本</span><strong id="appVersion">V1.0</strong></div>
+          <button class="sidebar-status-row version-trigger" id="developerVersionTrigger" type="button"><span class="sidebar-status-label">版本</span><strong id="appVersion">V1.0</strong></button>
           <div class="sidebar-status-row"><span class="status-dot api-unconfigured" id="apiStatusDot" aria-hidden="true"></span><span class="status-text" id="apiStatusText">API：確認中</span></div>
         </div>
       </aside>
@@ -40,6 +40,7 @@
         </header>
 
         <div class="global-message hidden" id="globalMessage" role="alert"></div>
+        <div id="startupStatus" role="status"><p id="startupMessage">正在載入工作台…</p><button id="startupRetry" class="button secondary" type="button" hidden>重新載入</button></div>
 
         <section class="page active" id="page-prompts" aria-labelledby="pageTitle"></section>
 
@@ -54,14 +55,14 @@
               <div class="selection-list" id="projectList"><div class="empty-state">選擇根目錄後顯示專案。</div></div>
             </section>
             <section class="panel file-list-panel" aria-labelledby="fileListTitle">
-              <div class="panel-heading"><div><span class="step">02</span><h3 id="fileListTitle">提示詞一覽表</h3></div><span class="count" id="fileCount">0</span></div>
-              <div class="project-summary" id="projectSummary"></div>
+              <div class="panel-heading file-list-heading"><div><span class="step">02</span><h3 id="fileListTitle">提示詞一覽表</h3></div><div class="project-summary" id="projectSummary"></div><span class="count" id="fileCount">0</span></div>
               <div class="file-table-wrap">
                 <table class="file-table">
                   <thead><tr><th>檔案</th><th>辨識結果</th><th>大小</th><th><span class="sr-only">操作</span></th></tr></thead>
                   <tbody id="fileTableBody"><tr><td colspan="4" class="empty-cell">尚未選擇專案。</td></tr></tbody>
                 </table>
               </div>
+              <div class="scan-notice" id="scanNotice" role="status" hidden></div>
             </section>
             <section class="panel file-preview-panel" aria-labelledby="filePreviewTitle">
               <div class="panel-heading"><div><span class="step">03</span><h3 id="filePreviewTitle">內容預覽</h3></div><button class="button secondary" id="editFileButton" disabled>編輯</button></div>
@@ -137,6 +138,6 @@
       </main>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./app.js?v=3"></script>
+    <script src="./startup.js"></script>
   </body>
 </html>

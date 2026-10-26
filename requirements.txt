@@ -1,2 +1,4 @@
 pywebview>=6,<7
 tiktoken>=0.7,<1
+keyring>=25,<26
+PyYAML>=6.0,<7

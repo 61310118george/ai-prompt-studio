@@ -12,6 +12,13 @@ if ($env:OS -ne "Windows_NT") {
     throw "Windows build must run on Windows. PyInstaller does not cross-compile."
 }
 
+function Assert-AppClosed {
+    if (Get-Process -Name $AppName -ErrorAction SilentlyContinue) {
+        throw "Save your work and exit AI Prompt Studio Next before building. Never replace a running app."
+    }
+}
+Assert-AppClosed
+
 Set-Location $RootDir
 if (-not (Test-Path $Python)) {
     py -3.12 -m venv $VenvDir
@@ -26,19 +33,30 @@ if (-not (Test-Path "resources\tokenizers\o200k_base.json") -or -not (Test-Path 
 }
 
 $env:PYTHONPATH = "src"
+$SslPolicy = & $Python -c 'import ssl; from pathlib import Path; print(Path(ssl.__file__).with_name("codex-rejected-cas.pem"))'
+if ($LASTEXITCODE -ne 0) { throw "Unable to inspect Python TLS runtime." }
+$SslData = @()
+if (Test-Path $SslPolicy) {
+    $SslData = @("--add-data", "${SslPolicy};.")
+}
+Assert-AppClosed
 & $PyInstaller `
     --noconfirm `
     --clean `
     --windowed `
     --name $AppName `
     --collect-all tiktoken `
+    --collect-all keyring `
     --paths src `
     --add-data "web-ui;web-ui" `
     --add-data "resources;resources" `
+    @SslData `
     run_app.py
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller build failed." }
 
 $Executable = Join-Path $RootDir "dist\$AppName\$AppName.exe"
 & $Executable --self-test
+if ($LASTEXITCODE -ne 0) { throw "Packaged app self-test failed; archive not created." }
 
 $ReleaseDir = Join-Path $RootDir "release"
 $Archive = Join-Path $ReleaseDir "$AppName $ReleaseVersion Windows x64.zip"

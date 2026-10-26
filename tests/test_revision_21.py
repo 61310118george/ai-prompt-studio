@@ -45,6 +45,38 @@ def test_groups_hidden_skills_uppercase_and_exclusions(workspace):
     assert all(f['modified_at'] for f in result.values())
 
 
+def test_health_includes_clean_markdown_and_skills(workspace):
+    project, api = workspace
+    names = ['notes.markdown', '.agents/skills/check/SKILL.md', 'other.MD']
+    for index, name in enumerate(names):
+        path = project / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'# Document {index}\nA complete statement {index}.', encoding='utf-8')
+    result = run_memory_health_check(project, 'codex')
+    assert {f['relative_path'] for f in result['files']} == set(names)
+    assert all(not f['issues'] for f in result['files'])
+    assert api.read_memory_file(str(project), names[0])['ok']
+
+
+def test_scan_reports_walk_failure_and_cloud_placeholder(workspace, monkeypatch):
+    from ai_memory_app.services import project_scanner
+    project, _ = workspace
+    (project / '.notes.md.icloud').touch()
+    assert '尚未下載' in scan_project(project)['warnings'][0]
+    def failed_walk(path, **kwargs):
+        kwargs['onerror'](PermissionError(13, 'denied', str(path / 'private')))
+        return iter(())
+    monkeypatch.setattr(project_scanner.os, 'walk', failed_walk)
+    result = scan_project(project)
+    assert result['markdown_count'] == 0
+    assert '無法讀取目錄' in result['warnings'][0]
+
+
+def test_windows_style_skill_classification():
+    from ai_memory_app.services.project_scanner import classify_group
+    assert classify_group(r'.agents\skills\review\SKILL.md', []) == 'skills'
+
+
 @pytest.mark.parametrize('name', ['AGENTS.md', 'notes.md', '.agents/skills/check/SKILL.md'])
 def test_editor_save_conflict_backup_and_exact_restore(workspace, name):
     project, api = workspace

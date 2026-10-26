@@ -1,9 +1,14 @@
 import { mountPromptWorkspace } from './prompt-workspace.js';
 import { fileDescription } from './file-description.js';
 import { mountCloudSettings } from './cloud-analysis.js';
+import { mountSocialSettings } from './social-workspace.js';
 import { APP_VERSION } from './version.js';
+import { mountDeveloperMode, isDeveloper } from './developer-mode.js';
 import { mountFileEditor, fileGroup, GROUPS } from './file-editor.js';
 import { renderHealthPanel } from './health-panel.js';
+import { installDialogDismissal } from './dialog-behavior.js';
+
+installDialogDismissal();
 
 const ICONS = {
   projects: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6.5h6l2 2h10v10.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6.5Z"/><path d="M3 11h18"/></svg>',
@@ -115,11 +120,12 @@ let promptWorkspace;
 let fileEditor;
 
 function buildNavigation() {
-  $("#navList").innerHTML = NAV_ITEMS.map((item) => `<button class="nav-button${item.id === state.page ? " active" : ""}" type="button" data-page="${item.id}" aria-current="${item.id === state.page ? "page" : "false"}">${item.icon}<span>${item.label}</span></button>`).join("");
+  $("#navList").innerHTML = NAV_ITEMS.filter(item=>item.id!=='health'||isDeveloper()).map((item) => `<button class="nav-button${item.id === state.page ? " active" : ""}" type="button" data-page="${item.id}" aria-current="${item.id === state.page ? "page" : "false"}">${item.icon}<span>${item.label}</span></button>`).join("");
   document.querySelectorAll(".nav-button").forEach((button) => button.addEventListener("click", () => setPage(button.dataset.page)));
 }
 
 function setPage(pageId) {
+  if (pageId==='health'&&!isDeveloper()) pageId='prompts';
   state.page = pageId;
   document.querySelectorAll(".page").forEach((page) => page.classList.toggle("active", page.id === `page-${pageId}`));
   document.querySelectorAll(".nav-button").forEach((button) => {
@@ -180,6 +186,10 @@ function renderProjectScan() {
   $("#fileCount").textContent = scan.markdown_count;
   const chips = scan.detected_agents.map((id) => state.catalog.agents.find((agent) => agent.id === id)?.name || id).map((name) => `<span class="agent-chip">${escapeHtml(name)}</span>`).join("");
   $("#projectSummary").innerHTML = `<strong>${escapeHtml(scan.name)}</strong><span>${scan.recognized_count}/${scan.markdown_count} 個檔案已辨識</span>${chips}`;
+  const notices = [...(scan.warnings || [])];
+  if (!scan.files.length) notices.unshift(`掃描位置：${scan.path}\n此資料夾及子資料夾未找到 Markdown（.md／.markdown，包含 SKILL.md）。請確認選取位置與雲端檔案是否已下載。`);
+  $('#scanNotice').textContent = notices.join('\n');
+  $('#scanNotice').hidden = !notices.length;
   $("#fileTableBody").innerHTML = scan.files.length ? Object.entries(GROUPS).filter(([group])=>scan.files.some((file)=>fileGroup(file)===group)).map(([group,label])=>`<tr class="file-group"><th colspan="4">${label} · ${scan.files.filter(f=>fileGroup(f)===group).length}</th></tr>`+scan.files.filter(f=>fileGroup(f)===group).map((file) => {
     const labels = file.classifications.length ? file.classifications.map((item) => `<span class="classification"><span class="recognition-chip">${escapeHtml(item.agent_name)} · ${escapeHtml(item.file_label)}</span><small>${escapeHtml(item.scope)} · ${escapeHtml(item.load_status)}</small></span>`).join("") : '<span class="recognition-chip generic">一般 Markdown</span>';
     const description=fileDescription(file);
@@ -322,8 +332,10 @@ async function restoreChange(changeId) {
 }
 
 async function runHealth() {
+  if (!isDeveloper()) return;
   if (!state.project) throw new Error("請先到「專案」選擇一個專案。");
   const result = assertResponse(await bridge.call("run_memory_health_check", state.project.path, $("#healthAgentSelect").value));
+  if (!isDeveloper()) return;
   renderHealth(result);
 }
 
@@ -374,9 +386,21 @@ async function init() {
   const historyPanel=$('.history-section');historyPanel.classList.add('panel');$('#page-projects').append(historyPanel);
   promptWorkspace = mountPromptWorkspace({bridge, state, escapeHtml, reportError: showError, toast: showToast});
   mountCloudSettings(bridge);
+  mountSocialSettings({bridge,esc:escapeHtml});
   fileEditor=mountFileEditor({bridge,state,esc:escapeHtml,toast:showToast,toWorkbench:async draft=>{if(!await promptWorkspace.importDraft(draft))return false;setPage('prompts');return true;},refreshed:async path=>{state.scan=assertResponse(await bridge.call('scan_project',state.project.path));renderProjectScan();await previewFile(path);await loadHistory();await runHealth();await promptWorkspace.reload();}});
   $('#editFileButton').onclick=()=>fileEditor.open(state.previewPath).catch(e=>showError(e.message));
+  await mountDeveloperMode({bridge,onChange:async enabled=>{
+    buildNavigation();
+    if(!enabled){
+      $('#healthFiles').replaceChildren();$('#healthPreview').replaceChildren();$('#healthScope').textContent='';
+      document.querySelectorAll('#healthStats strong').forEach(node=>node.textContent='0');
+      if(state.page==='health')setPage('prompts');
+    }else if(state.project){await runHealth();}
+  }});
   setPage(state.page);
 }
 
-init().catch((error) => showError(`初始化失敗：${error.message || error}`));
+init().then(() => window.dispatchEvent(new Event('app-startup-ready'))).catch(error => {
+  showError(`初始化失敗：${error.message || error}`);
+  window.dispatchEvent(new CustomEvent('app-startup-error', {detail:error.message || String(error)}));
+});

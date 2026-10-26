@@ -1,3 +1,4 @@
+import { isDeveloper } from './developer-mode.js';
 const response = result => {if(!result?.ok)throw Error(result?.error||'API 操作失敗');return result.data;};
 const publishCloudStatus = status => document.dispatchEvent(new CustomEvent('cloud-status-changed',{detail:status}));
 
@@ -69,11 +70,13 @@ export function mountCloudAnalysis({root,bridge,content,onApply}){
   function invalidate(){
     epoch++;lastAnalysis=null;optimization=null;result.textContent='';result.classList.add('hidden');
     optimizeButton.classList.add('hidden');optimizationPanel.classList.add('hidden');
+    for(const id of ['cloudOriginal','cloudOptimized','cloudOptimizationDiff'])box.querySelector(`#${id}`).replaceChildren();
     status.textContent=busy?'草稿已變更，舊結果不會套用。':'';
   }
   root.querySelector('#usageTool').addEventListener('change',invalidate);document.addEventListener('cloud-settings-changed',invalidate);
+  document.addEventListener('developer-mode-changed',invalidate);
   analyzeButton.onclick=async()=>{
-    if(busy)return;
+    if(busy||!isDeveloper())return;
     const text=content(),tool=root.querySelector('#usageTool').value;
     const estimatedTokens=Number(root.querySelector('#usageEstimate')?.dataset.tokens||0);
     const modelHint=root.querySelector('#usageModel')?.dataset.model||'';
@@ -94,7 +97,7 @@ export function mountCloudAnalysis({root,bridge,content,onApply}){
     finally{busy=false;analyzeButton.disabled=false;optimizeButton.disabled=false;}
   };
   optimizeButton.onclick=async()=>{
-    if(busy||!lastAnalysis)return;
+    if(busy||!lastAnalysis||!isDeveloper())return;
     const text=content(),tool=root.querySelector('#usageTool').value;
     if(text!==lastAnalysis.source){invalidate();status.textContent='草稿已變更，請重新執行 AI 分析。';return;}
     busy=true;analyzeButton.disabled=true;optimizeButton.disabled=true;optimizeButton.textContent='優化中…';const generation=epoch;
@@ -111,7 +114,7 @@ export function mountCloudAnalysis({root,bridge,content,onApply}){
     finally{busy=false;analyzeButton.disabled=false;optimizeButton.disabled=false;optimizeButton.textContent='AI 優化';}
   };
   applyButton.onclick=()=>{
-    if(!optimization||optimization.original!==content())return;
+    if(!isDeveloper()||!optimization||optimization.original!==content())return;
     onApply(optimization.optimized);status.textContent='已將 AI 優化結果帶回草稿；尚未儲存版本。';
   };
   return invalidate;

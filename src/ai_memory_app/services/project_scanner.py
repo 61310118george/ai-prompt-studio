@@ -13,8 +13,9 @@ OUTPUT_PATH_PATTERN = re.compile(r'(?:^|/)(?:deliverables?|outputs?)(?:/|$)|(?:�
 
 
 def classify_group(relative_path: str, classifications: list[dict[str, str]]) -> str:
-    parts = Path(relative_path).parts
-    if Path(relative_path).name.lower() == 'skill.md' or 'skills' in parts:
+    normalized = relative_path.replace('\\', '/')
+    parts = [part.lower() for part in normalized.split('/')]
+    if parts[-1] == 'skill.md' or 'skills' in parts:
         return 'skills'
     if classifications:
         return 'core'
@@ -94,9 +95,15 @@ def scan_project(project_path: Path) -> dict:
     project_root = project_path.resolve(strict=True)
     warnings = []
     candidates = []
-    for directory, dirs, names in os.walk(project_path, followlinks=False):
+    def walk_error(error):
+        warnings.append(f'無法讀取目錄：{error.filename or project_path}（請確認權限或雲端下載狀態）')
+
+    for directory, dirs, names in os.walk(project_path, followlinks=False, onerror=walk_error):
         dirs[:] = sorted(d for d in dirs if d not in {'.git', '.venv', 'venv', 'node_modules', '__pycache__', 'build', 'dist', '.pytest_cache'} and not (Path(directory) / d).is_symlink())
-        candidates.extend(Path(directory) / name for name in sorted(names) if name.lower().endswith('.md'))
+        candidates.extend(Path(directory) / name for name in sorted(names) if name.lower().endswith(('.md', '.markdown')))
+        placeholders = [name for name in names if name.lower().endswith(('.md.icloud', '.markdown.icloud'))]
+        if placeholders:
+            warnings.append(f'{Path(directory).relative_to(project_path)}：{len(placeholders)} 份 Markdown 尚未下載至本機，請先在 Finder 下載。')
         if len(candidates) > 5000:
             warnings.append('檔案超過 5,000 個，本次只掃描前 5,000 個 Markdown。')
             candidates = candidates[:5000]
@@ -104,6 +111,7 @@ def scan_project(project_path: Path) -> dict:
     for path in candidates:
         try:
             actual = path.resolve(strict=True)
+            stat = actual.stat()
         except (OSError, RuntimeError):
             warnings.append(f'無法讀取：{path.name}')
             continue
@@ -117,8 +125,8 @@ def scan_project(project_path: Path) -> dict:
                 "name": path.name,
                 "title": markdown_title(actual),
                 "relative_path": relative_path,
-                "size": path.stat().st_size,
-                "modified_at": datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(),
+                "size": stat.st_size,
+                "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
                 "group": classify_group(relative_path, classifications),
                 "recognized": bool(classifications),
                 "classifications": classifications,

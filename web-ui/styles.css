@@ -90,6 +90,11 @@ h3 { margin-bottom: 0; font-size: .98rem; }
 
 .global-message { margin: 18px 0 -2px; padding: 12px 14px; border: 1px solid #e3b6b6; border-radius: 10px; background: #fff0f0; color: #7f2525; }
 .hidden { display: none !important; }
+.developer-settings-body { padding: 16px; }
+.version-trigger { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.developer-settings .panel-heading { flex-wrap: wrap; }
+.developer-dialog { max-width: 460px; }
+.developer-dialog label { display: grid; gap: 8px; margin: 16px 0; }
 .page { display: none; padding-top: 24px; }
 .page.active { display: block; animation: reveal 180ms ease-out; }
 @keyframes reveal { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
@@ -110,14 +115,20 @@ h3 { margin-bottom: 0; font-size: .98rem; }
 .selection-item:hover { background: var(--surface-muted); }
 .selection-item.active { background: var(--primary-soft); border-color: #dbc0b0; color: #5f3928; }
 .selection-item small { color: var(--text-muted); }
-.project-summary { min-height: 48px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: .78rem; }
+.file-list-heading { flex-wrap: wrap; }
+.file-list-heading > div:first-child { flex-shrink: 0; }
+.file-list-heading h3 { white-space: nowrap; }
+.project-summary { min-width: 0; margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; color: var(--text-muted); font-size: .75rem; overflow-wrap: anywhere; }
+.project-summary strong { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scan-notice { padding: 10px 16px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .8rem; overflow-wrap: anywhere; white-space: pre-line; }
 .agent-chip, .recognition-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 8px; border-radius: 999px; background: #e3eee7; color: #315d49; font-size: .68rem; font-weight: 700; white-space: nowrap; }
 .recognition-chip.generic { background: var(--surface-muted); color: var(--text-muted); }
 .classification { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
 .classification small { color: var(--text-muted); font-size: .66rem; line-height: 1.35; }
 .file-table-wrap { max-height: 518px; overflow: auto; }
 .file-table { width: 100%; border-collapse: collapse; font-size: .79rem; }
-.file-table th { position: sticky; top: 0; z-index: 1; padding: 9px 12px; background: #f8f4ee; color: var(--text-muted); text-align: left; font-size: .69rem; letter-spacing: .03em; }
+.file-table th { padding: 9px 12px; background: #f8f4ee; color: var(--text-muted); text-align: left; font-size: .69rem; letter-spacing: 0; }
+.file-table thead th { position: sticky; top: 0; z-index: 2; }
 .file-table td { padding: 11px 12px; border-top: 1px solid var(--border); vertical-align: middle; }
 .file-table td:nth-child(3) { white-space: nowrap; }
 .file-name { max-width: 280px; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -436,3 +447,81 @@ dd { margin: 0; font-size: .8rem; font-weight: 650; }
 .health-line.flagged { background:#faeccd; border-left:3px solid var(--warning); }.health-line.flagged.error { background:#fce2df; border-color:var(--danger); }
 @media(max-width:820px){.editor-grid,.health-layout{grid-template-columns:minmax(0,1fr);} .editor-footer{padding:12px;} .editor-grid{padding:0 12px 12px;} .file-editor{width:calc(100vw - 16px);max-width:calc(100vw - 16px);} }
 @media(max-width:560px){.file-group{display:block!important}.file-group th{display:block!important}.file-editor .button{padding:8px 12px}.editor-footer span{flex-basis:100%;}.nav-list{grid-template-columns:repeat(4,minmax(0,1fr));}}
+/* Desktop data tools share the workbench width without nested panel framing. */
+[hidden] { display: none !important; }
+.workspace-tabs { display: flex; gap: 20px; border-bottom: 1px solid #c9c9c5; margin: 0 0 20px; }
+.workspace-tabs button { background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 12px 4px; font: inherit; color: #575c59; cursor: pointer; }
+.workspace-tabs button[aria-selected="true"] { border-bottom-color: #287c73; color: #195d56; font-weight: 700; }
+.data-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 12px 0; }
+.data-toolbar label { min-width: 130px; flex: 0 1 200px; }
+.data-toolbar select, .social-config input, #socialCandidates select { width: 100%; min-height: 40px; padding: 8px; }
+.data-toolbar .inline-check { display: flex; align-items: center; gap: 8px; flex-basis: auto; }
+.inline-check input, .data-table input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 18px; }
+.data-table-scroll { width: 100%; overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
+.data-table th, .data-table td { padding: 12px; border-bottom: 1px solid #d5d9d6; vertical-align: top; overflow-wrap: anywhere; }
+.data-table th:first-child { width: 64px; }
+.data-table th:nth-child(2) { width: 80px; }
+.social-table th:nth-child(2) { width: 40%; }
+.data-table pre, .data-dialog pre, .marketing-comparison pre, #marketingDiff { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; max-height: 380px; overflow: auto; }
+.data-table small { display: block; margin-top: 8px; color: #606863; }
+.data-dialog { width: min(900px, calc(100vw - 40px)); max-height: calc(100vh - 60px); padding: 24px; border: 1px solid #b8c5be; border-radius: 8px; color: #232b27; background: #fcfdfc; overflow: auto; }
+.data-dialog::backdrop { background: rgb(20 30 25 / 40%); }
+.data-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.data-dialog-heading .icon-button { width: 36px; height: 36px; border: 0; background: transparent; font-size: 24px; cursor: pointer; }
+.social-settings { grid-column: 1 / -1; padding: 20px; }
+.social-config { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.social-account { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-top: 1px solid #d5d9d6; }
+#socialCandidates { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 16px 0; }
+#socialCandidates label { flex: 1 1 200px; min-width: 0; }
+.marketing-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.marketing-comparison > div { min-width: 0; }
+#marketingResult { margin-top: 24px; border-top: 1px solid #b8c5be; padding-top: 16px; }
+#marketingDiff span { display: block; min-height: 1em; }
+.diff-added { background: #deefe4; color: #185d35; }
+.diff-removed { background: #fae3e0; color: #943b32; }
+@media (max-width: 700px) {
+  .social-config, .marketing-comparison { grid-template-columns: 1fr; }
+  .data-table { min-width: 580px; }
+  .data-dialog { padding: 16px; }
+}
+/* Keep the per-section review usable in WKWebView and Windows WebView2. */
+.usage-guide[hidden], #sectionAiReview[hidden] { display: none !important; }
+.section-ai-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.section-ai-heading h3 { margin: 0; }
+.section-ai-dialog { width: min(820px, calc(100vw - 48px)); max-height: calc(100vh - 48px); overflow: auto; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; padding: 20px; }
+.section-ai-dialog::backdrop { background: rgb(0 0 0 / 35%); }
+.section-ai-dialog form { display: grid; gap: 14px; min-width: 0; }
+.section-ai-dialog label { display: grid; gap: 6px; min-width: 0; }
+.section-ai-dialog input, .section-ai-dialog select, .section-ai-dialog textarea { width: 100%; box-sizing: border-box; }
+.section-ai-dialog pre, #sectionAiContext { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 600px) { .section-ai-dialog .ai-comparison { grid-template-columns: 1fr; } }
+.document-type-tabs { display:flex; justify-content:center; flex-wrap:wrap; gap:4px; border:0; padding:8px 0; margin:0 0 16px; min-width:0; }
+.document-type-tabs label { position:relative; margin:0; cursor:pointer; }
+.document-type-tabs input { position:absolute; opacity:0; width:1px; height:1px; }
+.document-type-tabs span { display:block; padding:10px 14px; border-bottom:3px solid transparent; }
+.document-type-tabs input:checked + span { border-color:#286858; color:#205447; font-weight:700; }
+.document-type-tabs input:disabled + span { opacity:.45; cursor:not-allowed; }
+.document-type-tabs input:focus-visible + span { outline:2px solid #286858; outline-offset:2px; }
+.document-subtopics { min-height:12px; margin-top:12px; }
+.document-subtopics:empty { display:none; }
+#promptTitleField { margin:18px 0; }
+#documentFields[hidden] { display:none !important; }
+.document-field .section-ai-heading { margin-bottom:8px; }
+.document-field .document-revise-button { min-height:30px; padding:4px 10px; line-height:1.4; }
+.document-write-button { width:100%; min-height:34px; padding:6px 12px; line-height:1.4; margin:10px 0 12px; }
+#documentFormArea #promptCategory { height:44px; }
+.document-ai-questions { display:grid; gap:14px; }
+#documentFormArea > .prompt-tag-field { margin-top:18px; }
+#documentAiMessage:empty { display:none; }
+#documentAiApply { min-height:32px; padding:5px 12px; line-height:1.4; margin-top:12px; }
+.document-ai-dialog li { overflow-wrap:anywhere; }
+.document-fields, #documentEditor { display:grid; gap:18px; min-width:0; }
+.document-field textarea { width:100%; box-sizing:border-box; resize:vertical; }
+.document-steps { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+.document-step { background:transparent; border:0; border-bottom:2px solid transparent; padding:8px; font:inherit; cursor:pointer; }
+.document-step[aria-current] { border-color:#286858; font-weight:700; }
+.document-step:disabled { opacity:.45; cursor:not-allowed; }
+#documentStepActions { margin-top:16px; }
+#documentBuilderError { color:#a12d2d; }
+#documentEditor[hidden], #documentFormArea[hidden], .document-steps[hidden], #documentStepActions[hidden], .section-ai-dialog [hidden] { display:none !important; }

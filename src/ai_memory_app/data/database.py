@@ -195,6 +195,40 @@ CREATE TABLE IF NOT EXISTS prompt_card_order (
 CREATE INDEX IF NOT EXISTS idx_prompt_card_order_group
   ON prompt_card_order(project_path, group_name, sort_order);
 
+CREATE TABLE IF NOT EXISTS user_tag_templates (
+  tag TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS prompt_drafts (
+  project_path TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS social_config (
+  name TEXT PRIMARY KEY, value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS social_accounts (
+  platform TEXT PRIMARY KEY, account_id TEXT NOT NULL, name TEXT NOT NULL,
+  connected INTEGER NOT NULL DEFAULT 1, status TEXT NOT NULL DEFAULT 'connected',
+  expires_at REAL, synced_at TEXT
+);
+CREATE TABLE IF NOT EXISTS social_posts (
+  platform TEXT NOT NULL, post_id TEXT NOT NULL, account_id TEXT NOT NULL,
+  content TEXT NOT NULL, permalink TEXT NOT NULL, published_at TEXT NOT NULL,
+  media_type TEXT NOT NULL, PRIMARY KEY(platform, post_id)
+);
+CREATE TABLE IF NOT EXISTS social_snapshots (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, platform TEXT NOT NULL, post_id TEXT NOT NULL,
+  captured_at TEXT NOT NULL, metrics TEXT NOT NULL, warnings TEXT NOT NULL, source TEXT NOT NULL DEFAULT '{}',
+  FOREIGN KEY(platform, post_id) REFERENCES social_posts(platform, post_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_social_snapshot_post ON social_snapshots(platform, post_id, id);
+CREATE TABLE IF NOT EXISTS social_syncs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, platform TEXT NOT NULL,
+  captured_at TEXT NOT NULL, result TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS marketing_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL,
+  source TEXT NOT NULL, evidence TEXT NOT NULL, result TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_memory_items_main_area ON memory_items(main_area);
 CREATE INDEX IF NOT EXISTS idx_memory_items_category ON memory_items(category);
 CREATE INDEX IF NOT EXISTS idx_memory_items_enabled ON memory_items(enabled);
@@ -299,6 +333,17 @@ def _column_names(connection: sqlite3.Connection, table_name: str) -> set[str]:
 def apply_migrations(connection: sqlite3.Connection) -> None:
     """Apply additive migrations while preserving every v1 table and row."""
     project_columns = _column_names(connection, "projects")
+    for table in ('prompt_library', 'prompt_revisions'):
+        if 'document_state' not in _column_names(connection, table):
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN document_state TEXT NOT NULL DEFAULT '{{}}'")
+    connection.execute("INSERT OR IGNORE INTO schema_migrations(version,name,applied_at) VALUES(8,?,?)",
+                       ('Typed document forms and project drafts', utc_now()))
+    if "source" not in _column_names(connection, "social_snapshots"):
+        connection.execute("ALTER TABLE social_snapshots ADD COLUMN source TEXT NOT NULL DEFAULT '{}'")
+    connection.execute(
+        "INSERT OR IGNORE INTO schema_migrations (version, name, applied_at) VALUES (7, ?, ?)",
+        ("CSV templates and social evidence snapshots", utc_now()),
+    )
     if "root_path" not in project_columns:
         connection.execute("ALTER TABLE projects ADD COLUMN root_path TEXT")
     if "last_scanned_at" not in project_columns:

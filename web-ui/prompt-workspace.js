@@ -1,7 +1,12 @@
 import { mountUsageGuide } from './usage-guide.js';
 import { PROMPT_TEMPLATES } from './prompt-templates.js';
 import { mountCloudAnalysis } from './cloud-analysis.js';
-import { DEFAULT_PROMPT_TAG_TEMPLATES, buildPromptFromTags, loadPromptTemplateCatalog, mountMarkdownEditor, parseMarkdownSections, updateMarkdownSection } from './prompt-builder.js';
+import { isDeveloper } from './developer-mode.js';
+import { mountSectionOptimization } from './section-optimization.js';
+import { mountCsvImport } from './csv-import.js';
+import { mountSocialWorkspace } from './social-workspace.js';
+import { mountDocumentBuilder } from './document-builder.js';
+import { mountMarkdownEditor, parseMarkdownSections, updateMarkdownSection } from './prompt-builder.js';
 export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportError, toast }) {
   const root = document.querySelector('#page-prompts');
   root.innerHTML = `
@@ -13,20 +18,24 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
         <div id="templateGroups" class="template-groups"></div>
       </div>
       </section>
-      <section class="panel"><div class="panel-heading prompt-editor-heading"><h3>提示詞編輯</h3><div class="prompt-file-actions"><button class="button secondary compact-button" id="promptNew" type="button" title="開始新的空白草稿">新增草稿</button><button class="button secondary compact-button" id="promptImportLocal" type="button">匯入本機提示詞</button><button class="button secondary compact-button" id="promptExportLocal" type="button">匯出本機提示詞</button></div></div>
-        <div class="prompt-fields"><label>標題<input id="promptTitle" maxlength="20" placeholder="例如：產品需求審查"></label>
-        <fieldset class="prompt-tag-field"><legend>標籤（非必填）</legend><p>可複選；建立提示詞時會套用對應模板。</p><div class="prompt-tag-options" id="promptTagOptions"></div></fieldset>
+      <section class="panel"><div class="panel-heading prompt-editor-heading"><h3>提示詞編輯</h3><div class="prompt-file-actions"><button class="button secondary compact-button" id="promptImportLocal" type="button">匯入本機提示詞</button></div></div>
+        <div class="prompt-fields"><div id="documentBuilder"></div>
+        <label id="promptTitleField">標題<input id="promptTitle" maxlength="20" placeholder="例如：產品需求審查"></label>
+        <div id="documentEditor" hidden>
         <label>群組（若要加入提示詞範本庫請選擇）<select id="promptCategory"><option value="">（不選擇）</option></select></label>
         <div class="prompt-builder-action"><button class="button secondary" id="promptBuild" type="button" disabled>建立提示詞</button><span id="promptBuildHint">請先輸入標題，或匯入本機 Markdown。</span></div>
         <section class="prompt-structure-panel" id="promptStructurePanel" hidden aria-labelledby="promptStructureTitle"><div class="prompt-structure-heading"><strong id="promptStructureTitle">Markdown 項目</strong><span id="promptStructureCount"></span></div><div class="prompt-structure-grid"><label>選擇項目<select id="promptSectionSelect"></select></label><label>標題層級<select id="promptSectionLevel"><option value="1">H1</option><option value="2">H2</option><option value="3">H3</option><option value="4">H4</option><option value="5">H5</option><option value="6">H6</option></select></label><label class="wide">項目標題<input id="promptSectionTitle" maxlength="120"></label><label class="wide">項目內容<textarea id="promptSectionBody" rows="7"></textarea></label></div><button class="button secondary compact-button" id="promptSectionApply" type="button">套用此項目</button></section>
         <div class="prompt-content-heading"><label for="promptContent">預覽提示詞</label></div><pre id="promptContent" class="prompt-editor markdown-prompt-editor is-empty" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="預覽提示詞" data-placeholder="可直接輸入 Markdown，或先建立／匯入提示詞。" spellcheck="false"></pre>
-        <div class="inline-actions prompt-actions"><button class="button primary" id="promptSave">儲存版本</button><button class="button secondary" id="promptCopy">複製</button><button class="button secondary" id="promptArchive">封存</button></div>
-      </div></section>
+        <div class="inline-actions prompt-actions"><button class="button primary" id="promptSave">儲存範本</button><button class="button secondary" id="promptClear">清除</button><button class="button secondary" id="promptSaveDraft">儲存草稿</button><button class="button secondary" id="promptExport">輸出提示詞</button></div>
+      </div></div></section>
   </div>`;
   const $ = (id) => root.querySelector(`#${id}`);
   const markdownEditor = mountMarkdownEditor($('promptContent'), () => dirty());
   const usage = document.createElement('div'); usage.className = 'usage-guide';
   root.querySelector('.prompt-actions').after(usage);
+  const syncUsageVisibility = () => { usage.hidden = !isDeveloper(); };
+  syncUsageVisibility();
+  document.addEventListener('developer-mode-changed', syncUsageVisibility);
   const updateUsage = mountUsageGuide(usage, state, () => root.querySelector('#promptContent').value);
   const updateCloud = mountCloudAnalysis({
     root:usage,
@@ -34,7 +43,7 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
     content:()=>root.querySelector('#promptContent').value,
     onApply:value=>{root.querySelector('#promptContent').value=value;dirty();root.querySelector('#promptContent').focus();toast('AI 優化結果已帶回草稿，請儲存新版本。');},
   });
-  let current = null, entries = [], groups = [], templatePreferences = [], cardOrder = [], loadEpoch = 0, draftTags = '', importedPrompt = false, tagCatalog = DEFAULT_PROMPT_TAG_TEMPLATES;
+  let builder, current = null, entries = [], groups = [], templatePreferences = [], cardOrder = [], loadEpoch = 0, draftTags = '', importedPrompt = false, tagCatalog = [];
   const response = (r) => { if (!r?.ok) throw Error(r?.error || '本機操作失敗'); return r.data; };
   const personalLibraryScope = '__local_prompt_library__';
   const libraryProject = () => state.project?.path || personalLibraryScope;
@@ -42,18 +51,19 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
   const dirty = () => {
     updateUsage();
     updateCloud();
+    updateSocial();
   };
-  const selectedTags = () => draftTags.split(/[,，]/).map(tag=>tag.trim()).filter(Boolean);
+  const updateSocial = mountSocialWorkspace({root,bridge,esc,content:()=>$('promptContent').value,onApply:value=>{$('promptContent').value=value;dirty();toast('已套用社群優化結果，請儲存草稿。');}});
+  const refreshCatalog = async () => {tagCatalog=response(await bridge.call('get_prompt_tag_catalog'));renderTagOptions();};
+  mountCsvImport({root,bridge,scope:libraryProject,esc,toast,refreshed:async()=>{await refreshCatalog();await reload();}});
   const updateBuilderAction = () => {
+    builder?.gate();
     $('promptBuild').textContent=importedPrompt?'修正提示詞':'建立提示詞';
-    $('promptBuild').disabled=!importedPrompt&&!$('promptTitle').value.trim();
-    $('promptBuildHint').textContent=importedPrompt?'已匯入 Markdown；可辨識標題並逐項修正。':$('promptTitle').value.trim()?'可依所選標籤建立基本模板。':'請先輸入標題，或匯入本機 Markdown。';
+    $('promptBuild').disabled=!builder?.ready();
+    $('promptExport').textContent=builder?.isProject()?'輸出專案資料夾':'輸出提示詞';
+    $('promptBuildHint').textContent='';
   };
-  const renderTagOptions = () => {
-    const selected=selectedTags(),known=tagCatalog.map(item=>item.tag),tags=[...known,...selected.filter(tag=>!known.includes(tag))];
-    $('promptTagOptions').innerHTML=tags.map(tag=>`<label class="prompt-tag-chip"><input type="checkbox" value="${esc(tag)}" ${selected.includes(tag)?'checked':''}><span>${esc(tag)}</span></label>`).join('');
-    $('promptTagOptions').querySelectorAll('input').forEach(input=>input.addEventListener('change',()=>{draftTags=[...$('promptTagOptions').querySelectorAll('input:checked')].map(item=>item.value).join(',');dirty();}));
-  };
+  const renderTagOptions = () => builder?.setCatalog(tagCatalog);
   const closeStructureEditor = () => { $('promptStructurePanel').hidden=true; };
   const loadStructureSection = () => {
     const sections=parseMarkdownSections($('promptContent').value),section=sections[Number($('promptSectionSelect').value)||0];
@@ -72,26 +82,32 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
     loadStructureSection();
     return sections.length;
   };
-  const values = () => ({ title: $('promptTitle').value, category: $('promptCategory').value, tags: draftTags, content: $('promptContent').value });
-  const mayReplace = () => !Object.entries(values()).some(([key,value])=>value !== (current?.[key] || '')) || window.confirm('目前有尚未儲存的草稿，確定換成另一份？');
+  const values = () => ({ title: $('promptTitle').value, category: $('promptCategory').value, tags: draftTags, content: $('promptContent').value, tool: $('usageTool').value, imported: importedPrompt, document_state:builder?.snapshot()||{} });
+  let savedValues = null;
+  const mayReplace = () => JSON.stringify(values()) === JSON.stringify(savedValues) || window.confirm('目前有尚未儲存的草稿，確定換成另一份？');
   const resolvedTemplates = () => PROMPT_TEMPLATES.map((item,index)=>{
     const preference=templatePreferences.find(entry=>entry.template_key===item.id);
     return {item,index,category:preference?.category||item.category,hidden:Boolean(preference?.hidden)};
   });
-  const defaultGroups = () => [...new Set(resolvedTemplates().filter(item=>!item.hidden).map(item=>item.category).concat(['一般']))];
+  const defaultGroups = () => [...new Set(resolvedTemplates().filter(item=>!item.hidden).map(item=>item.category))];
   const applyTemplate = async (index) => {
     if(!mayReplace())return;
     const template=PROMPT_TEMPLATES[Number(index)]; await select(null);
     for(const [key,id] of [['title','promptTitle'],['category','promptCategory'],['content','promptContent']])$(id).value=template[key];
     draftTags=template.tags||'';
+    builder.restore(null,true);importedPrompt=true;
     renderTagOptions();updateBuilderAction();dirty();$('promptContent').focus();toast('範本已帶入草稿，可直接修改標題；儲存後會加入範本庫。');
   };
   async function select(item) {
     current = item;
     for (const [key, id] of [['title','promptTitle'],['content','promptContent'],['category','promptCategory']]) $(id).value = item?.[key] || '';
     draftTags=item?.tags||'';
-    importedPrompt=false;closeStructureEditor();renderTagOptions();updateBuilderAction();
-    $('promptArchive').textContent = item?.archived ? '取消封存' : '封存';
+    builder?.restore(item?.document_state,Boolean(item?.content));
+    let metadata=item?.document_state;
+    if(typeof metadata==='string'){try{metadata=JSON.parse(metadata);}catch{metadata=null;}}
+    importedPrompt=Boolean(item?.imported || (item?.content&&!metadata?.mode));closeStructureEditor();renderTagOptions();updateBuilderAction();
+    $('usageTool').value = 'codex';
+    savedValues = values();
     dirty();
   }
   function renderLibrary() {
@@ -118,7 +134,7 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
         if(aPosition!==undefined)return -1;if(bPosition!==undefined)return 1;return 0;
       });
       const cards = cardItems.map(item=>item.markup).join('') || '<p class="empty-state group-empty">把已儲存的範本拖到這裡。</p>';
-      const deleteButton = name === '一般' ? '' : `<button class="template-group-delete" type="button" data-delete-group="${esc(name)}" title="刪除群組" aria-label="刪除 ${esc(name)} 群組">×</button>`;
+      const deleteButton = `<button class="template-group-delete" type="button" data-delete-group="${esc(name)}" title="刪除群組" aria-label="刪除 ${esc(name)} 群組">×</button>`;
       return `<section class="template-group" data-group-name="${esc(name)}"><header><div class="template-group-title"><strong>${esc(name)}</strong><span class="template-group-count" aria-label="${totalCards} 個範本">${totalCards}</span></div>${deleteButton}</header><div class="template-group-items">${cards}</div></section>`;
     }).join('') || '<p class="empty-state">尚無範本。建立草稿並儲存後會出現在這裡。</p>';
     $('templateGroups').querySelectorAll('[data-template]').forEach(button=>button.addEventListener('click',event=>{
@@ -128,7 +144,7 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
     $('templateGroups').querySelectorAll('[data-prompt-id]').forEach(button=>{
       button.addEventListener('click',event=>{
         if(button.closest('[data-drag-kind]')?.dataset.dragSuppress==='true'){event.preventDefault();return;}
-        run(()=>select(entries.find(item=>String(item.id)===button.dataset.promptId)))();
+        run(()=>mayReplace() && select(entries.find(item=>String(item.id)===button.dataset.promptId)))();
       });
     });
     $('templateGroups').querySelectorAll('[data-delete-group]').forEach(button=>button.addEventListener('click',run(()=>deleteGroup(button.dataset.deleteGroup))));
@@ -215,13 +231,16 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
     return new Promise(resolve=>{let settled=false;const finish=()=>{if(settled)return;settled=true;resolve();};card.addEventListener('animationend',finish,{once:true});setTimeout(finish,520);});
   }
   async function deleteGroup(name) {
+    const fallback = name === '一般' ? '未分類' : '一般';
     const affected=entries.filter(item=>item.category===name).length;
     const builtinKeys=resolvedTemplates().filter(item=>item.category===name&&!item.hidden).map(item=>item.item.id);
     const totalAffected=affected+builtinKeys.length;
-    if(!window.confirm(`刪除「${name}」群組？${totalAffected?`\n\n其中 ${totalAffected} 個範本會移回「一般」，不會被刪除。`:''}`))return;
+    if(!window.confirm(`刪除「${name}」群組？${totalAffected?`\n\n其中 ${totalAffected} 個範本會移至「${fallback}」，不會被刪除。`:''}`))return;
     response(await bridge.call('delete_prompt_group',libraryProject(),name,builtinKeys));
-    if(current?.category===name){current={...current,category:'一般'};$('promptCategory').value='一般';}
-    await reload();toast(`已刪除「${name}」群組${totalAffected?`，${totalAffected} 個範本已移回「一般」`:''}。`);
+    const selected = $('promptCategory').value === name;
+    if(current?.category===name)current={...current,category:fallback};
+    await reload();if(selected)$('promptCategory').value=fallback;
+    toast(`已刪除「${name}」群組${totalAffected?`，${totalAffected} 個範本已移至「${fallback}」`:''}。`);
   }
   async function deletePrompt(id) {
     const item=entries.find(entry=>String(entry.id)===String(id));if(!item)throw Error('找不到要刪除的範本。');
@@ -246,18 +265,35 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
     cardOrder = response(await bridge.call('list_prompt_card_order', libraryProject()));
     if (epoch !== loadEpoch) return;
     renderLibrary();
+    if (reset) {
+      const draft = response(await bridge.call('load_prompt_draft', libraryProject()));
+      if (epoch !== loadEpoch || !draft) return;
+      await select(draft);
+      if (draft.category && ![...$('promptCategory').options].some(option=>option.value===draft.category)) {
+        $('promptCategory').add(new Option(draft.category, draft.category));
+      }
+      $('promptCategory').value = draft.category || '';
+      $('usageTool').value = draft.tool === 'claude' ? 'claude' : 'codex';
+      importedPrompt = Boolean(draft.imported);
+      savedValues = values(); updateBuilderAction(); dirty();
+    }
   }
   async function save(archived = Boolean(current?.archived)) {
-    const request = { ...values(), id: current?.id, version: current?.version, archived, project_path: libraryProject() };
+    const request = { ...values(), category: $('promptCategory').value || '一般', id: current?.id, version: current?.version, archived, project_path: libraryProject() };
     if (!request.title.trim() || !request.content.trim()) throw Error('請填寫標題與提示詞內容。');
     current = response(await bridge.call('save_prompt', request));
-    $('promptArchive').textContent = current.archived ? '取消封存' : '封存';
-    await reload(); toast('已儲存提示詞版本。');
+    await reload(); $('promptCategory').value=current.category; savedValues=values(); toast('已儲存至範本庫。');
   }
-  $('promptNew').addEventListener('click', run(async()=>{if(mayReplace()){await select(null);$('promptTitle').focus();toast('已建立空白草稿；儲存後才會加入清單。');}}));
   $('promptSave').addEventListener('click',run(()=>save()));
-  $('promptArchive').addEventListener('click',run(async()=>{ if(!current) throw Error('請先儲存提示詞。'); await save(!current.archived); }));
-  $('promptCopy').addEventListener('click',run(async()=>{ await navigator.clipboard.writeText($('promptContent').value); toast('已複製提示詞。'); }));
+  $('promptSaveDraft').addEventListener('click',run(async()=>{
+    const snapshot=values();
+    response(await bridge.call('save_prompt_draft',{...snapshot,project_path:libraryProject()}));
+    savedValues=snapshot;toast('已儲存草稿，重新開啟時會恢復。');
+  }));
+  $('promptClear').addEventListener('click',run(async()=>{
+    if(!window.confirm('確定清除目前編輯內容與設定？已儲存的範本及草稿不會刪除。'))return;
+    await select(null);$('promptTitle').focus();toast('已清除編輯內容。');
+  }));
   $('promptSearch').addEventListener('input',renderLibrary);
   $('promptGroupAdd').addEventListener('click',run(async()=>{
     const name=window.prompt('群組名稱（例如：畢業專題、客服、研究）');if(name===null)return;
@@ -274,21 +310,44 @@ export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportErr
   $('promptImportLocal').addEventListener('click',run(async()=>{
     if(!mayReplace())return;
     const file=response(await bridge.call('import_prompt_file'));if(!file)return;
-    await select(null);$('promptTitle').value=String(file.name||'匯入提示詞').slice(0,20);$('promptContent').value=file.content;importedPrompt=true;updateBuilderAction();dirty();$('promptBuild').focus();toast(`已匯入 ${file.filename||file.name}；點擊「修正提示詞」可依 Markdown 項目編輯。`);
+    await select(null);$('promptTitle').value=String(file.name||'匯入提示詞').slice(0,20);$('promptContent').value=file.content;
+    const filename=String(file.filename||file.name).toLowerCase();
+    const mode=filename==='agents.md'?'core':filename==='skill.md'?'skill':'memory';
+    builder.restore({mode,active:mode,major:'',minors:[],documents:{[mode]:{fields:{},content:file.content}}});
+    importedPrompt=true;updateBuilderAction();dirty();$('promptBuild').focus();toast(`已匯入 ${file.filename||file.name}；點擊「修正提示詞」可依 Markdown 項目編輯。`);
   }));
-  $('promptExportLocal').addEventListener('click',run(async()=>{
+  $('promptExport').addEventListener('click',run(async()=>{
+    if(builder.isProject()){
+      const documents=builder.documents();
+      const files=response(await bridge.call('preview_document_project',documents));
+      if(!window.confirm(`將輸出以下文件到新的專案資料夾：\n\n${Object.keys(files).join('\n')}\n\n接著請選擇存放位置。`))return;
+      const result=response(await bridge.call('export_document_project',$('promptTitle').value,documents));
+      if(result)toast(`已輸出專案：${result.path}`);
+      return;
+    }
     const content=$('promptContent').value;if(!content.trim())throw Error('提示詞內容為空白，無法匯出。');
-    const file=response(await bridge.call('export_prompt_file',$('promptTitle').value||'my-prompt',content));if(!file)return;
+    builder.assertSynced();
+    const file=response(await bridge.call('export_document_file',builder.active(),content));if(!file)return;
     toast(`已匯出 ${file.filename}。`);
   }));
   $('promptBuild').addEventListener('click',run(async()=>{
     if(importedPrompt){const count=openStructureEditor();toast(`已辨識 ${count} 個 Markdown 項目，可從下拉選單逐項修正。`);return;}
-    const title=$('promptTitle').value.trim();if(!title)throw Error('請先輸入標題。');
-    if($('promptContent').value.trim()&&!window.confirm('用標籤模板取代目前的預覽提示詞？'))return;
-    $('promptContent').value=buildPromptFromTags(title,selectedTags(),tagCatalog);const count=openStructureEditor();dirty();$('promptContent').focus();toast(`已建立基本提示詞與 ${count} 個 Markdown 項目。`);
+    if(builder.build()){const count=openStructureEditor();dirty();toast(`已建立文件與 ${count} 個 Markdown 項目。`);}
   }));
+  mountSectionOptimization({root, bridge, snapshot:()=>({
+    title:$('promptTitle').value, tags:draftTags, section_title:$('promptSectionTitle').value,
+    content:$('promptSectionBody').value, source:$('promptContent').value,
+    section:$('promptSectionSelect').value, level:$('promptSectionLevel').value,
+    scope:libraryProject(), hidden:$('promptStructurePanel').hidden,
+  }), onApply:body=>{
+    $('promptSectionBody').value=body;
+    $('promptSectionApply').click();
+  }});
+  builder=mountDocumentBuilder({root,bridge,esc,getTitle:()=>$('promptTitle').value,getContent:()=>$('promptContent').value,
+    setContent:value=>{$('promptContent').value=value;importedPrompt=false;closeStructureEditor();dirty();},
+    onTags:tags=>{draftTags=tags;},onChange:()=>{updateBuilderAction();dirty();}});
   renderTagOptions();updateBuilderAction();
-  loadPromptTemplateCatalog().then(catalog=>{tagCatalog=catalog;renderTagOptions();}).catch(()=>{});
-  reload().catch(error=>reportError(error.message));
-  return {reload, async importDraft(draft){if(!mayReplace())return false;await select(null);for(const [key,id] of [['title','promptTitle'],['category','promptCategory'],['content','promptContent']])$(id).value=draft[key]||'';draftTags=draft.tags||'';renderTagOptions();updateBuilderAction();dirty();return true;}};
+  refreshCatalog().catch(error=>reportError(error.message));
+  reload(true).catch(error=>reportError(error.message));
+  return {reload, async importDraft(draft){if(!mayReplace())return false;await select(null);for(const [key,id] of [['title','promptTitle'],['category','promptCategory'],['content','promptContent']])$(id).value=draft[key]||'';draftTags=draft.tags||'';builder.restore(draft.document_state,true);importedPrompt=true;renderTagOptions();updateBuilderAction();dirty();return true;}};
 }

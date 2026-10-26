@@ -32,6 +32,21 @@ def test_tokenizers_are_available_without_network(monkeypatch):
         assert count_tokens("", name)["count"] == 0
 
 
+def test_prompt_draft_persistence_and_scope(api):
+    instance, root, db = api
+    draft = {"project_path": LOCAL_PROMPT_SCOPE, "title": "", "content": "未完成內容",
+             "tags": "寫作", "category": "", "tool": "claude", "imported": True}
+    assert instance.save_prompt_draft(draft)["ok"]
+    fresh = DesktopApi(MemoryRepository(db), backup_root=root / "backups")
+    restored = fresh.load_prompt_draft(LOCAL_PROMPT_SCOPE)["data"]
+    assert restored == {key: value for key, value in draft.items() if key != "project_path"}
+    assert instance.list_prompts(LOCAL_PROMPT_SCOPE)["data"] == []
+    assert instance.load_prompt_draft(str(root))["data"] is None
+    assert not instance.save_prompt_draft({**draft, "tool": "local"})["ok"]
+    assert instance.load_prompt_draft(LOCAL_PROMPT_SCOPE)["data"] == restored
+    assert instance.save_prompt_draft({**draft, "content": ""})["ok"]
+
+
 def test_optimizer_preserves_code_constraints_and_placeholders():
     code = "```python\nprint('x')\n\n\nprint('x')\n```\n"
     text = "## 任務\n\n\n- 不可省略 {{customer}}。\n- 不可省略 {{customer}}。\n\n" + code
@@ -143,7 +158,7 @@ def test_prompt_groups_can_be_created_and_used_for_drag_move(api):
     assert created["name"] == "課堂作業"
     moved = service.move_prompt_to_group(str(root), item["id"], "課堂作業")["data"]
     assert moved["category"] == "課堂作業"
-    assert [group["name"] for group in service.list_prompt_groups(str(root))["data"]][:2] == ["課堂作業", "一般"]
+    assert [group["name"] for group in service.list_prompt_groups(str(root))["data"]] == ["課堂作業"]
 
 
 def test_prompt_and_group_delete_are_scoped_and_keep_group_items(api):
@@ -155,7 +170,9 @@ def test_prompt_and_group_delete_are_scoped_and_keep_group_items(api):
     assert removed_group["ok"] and removed_group["data"]["moved_prompts"] == 2
     items = service.list_prompts(str(root))["data"]
     assert {item["category"] for item in items} == {"一般"}
-    assert not service.delete_prompt_group(str(root), "一般")["ok"]
+    assert service.delete_prompt_group(str(root), "一般")["ok"]
+    assert {item['category'] for item in service.list_prompts(str(root))['data']} == {'未分類'}
+    assert '一般' not in {item['name'] for item in service.list_prompt_groups(str(root))['data']}
     deleted = service.delete_prompt(str(root), second["id"])
     assert deleted["ok"] and deleted["data"]["deleted"]
     assert [item["id"] for item in service.list_prompts(str(root))["data"]] == [first["id"]]

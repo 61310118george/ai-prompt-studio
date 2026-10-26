@@ -5,6 +5,10 @@ import os
 import shutil
 import tempfile
 import difflib
+import json
+import secrets
+import time
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,6 +22,11 @@ from .memory_health import run_memory_health_check
 from .project_scanner import scan_project
 from .prompt_workbench import analyze_prompt, validate_text
 from .cloud_advisor import CloudAdvisor
+from .csv_import import CsvImport
+from .social_data import SocialData
+from .developer_mode import DeveloperMode
+from .document_project import project_files, write_project, skill_name
+from ..data.database import connect, utc_now
 
 LOCAL_PROMPT_SCOPE = "__local_prompt_library__"
 WINDOWS_RESERVED_NAMES = {
@@ -44,6 +53,131 @@ class DesktopApi:
         self.backup_root = backup_root or get_backup_dir()
         self.prompts = PromptLibrary(repository.db_path)
         self._cloud_advisor = CloudAdvisor()
+        self._csv_import = CsvImport(repository.db_path)
+        self._social = SocialData(repository.db_path)
+        self._marketing_previews = {}
+        self._developer = DeveloperMode(repository.db_path)
+
+    def get_developer_status(self):
+        return self._safe_call(self._developer.status)
+
+    def unlock_developer_mode(self, password):
+        return self._safe_call(lambda: self._developer.unlock(password))
+
+    def lock_developer_mode(self):
+        self._marketing_previews.clear()
+        return self._safe_call(self._developer.lock)
+
+    def _developer_call(self, callback):
+        def guarded():
+            generation = self._developer.require()
+            result = callback()
+            self._developer.require(generation)
+            return result
+        return self._safe_call(guarded)
+
+    def get_prompt_tag_catalog(self):
+        return self._safe_call(self._csv_import.catalog)
+
+    def preview_csv_import(self, kind, project_path):
+        def choose():
+            scope = self._prompt_scope(project_path)
+            if self.window is None:
+                raise ValueError("桌面視窗尚未就緒。")
+            import webview
+            selected = self.window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=("CSV (*.csv)",))
+            if not selected:
+                return None
+            target = Path(selected[0] if isinstance(selected, (tuple, list)) else selected)
+            if target.suffix.lower() != '.csv':
+                raise ValueError("請選擇 CSV 檔案。")
+            with target.open('rb') as handle:
+                raw = handle.read(5_000_001)
+            return {**self._csv_import.preview(raw, kind, scope), 'filename': target.name}
+        return self._safe_call(choose)
+
+    def commit_csv_import(self, request):
+        return self._safe_call(lambda: self._csv_import.commit(request['preview_id'], self._prompt_scope(request['project_path']), request['indices'], request.get('update') is True))
+
+    def export_csv_example(self, kind):
+        def save():
+            content = self._csv_import.example(kind)
+            if self.window is None:
+                raise ValueError("桌面視窗尚未就緒。")
+            import webview
+            selected = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=f'{kind}-example.csv', file_types=("CSV (*.csv)",))
+            if not selected:
+                return None
+            target = Path(selected[0] if isinstance(selected, (list, tuple)) else selected).with_suffix('.csv')
+            self._atomic_write(target, content)
+            return {'filename': target.name}
+        return self._safe_call(save)
+
+    def get_social_settings(self):
+        return self._developer_call(self._social.settings)
+
+    def configure_social(self, service_url, connection_code):
+        return self._developer_call(lambda: self._social.configure(service_url, connection_code))
+
+    def begin_social_login(self, provider):
+        return self._developer_call(lambda: self._social.begin(provider))
+
+    def poll_social_login(self):
+        return self._developer_call(self._social.poll)
+
+    def select_social_accounts(self, keys):
+        return self._developer_call(lambda: self._social.select_accounts(keys))
+
+    def disconnect_social(self, platform):
+        return self._developer_call(lambda: self._social.disconnect(platform))
+
+    def clear_social_data(self, platform):
+        return self._developer_call(lambda: self._social.clear(platform))
+
+    def sync_social(self, platform):
+        return self._developer_call(lambda: self._social.sync(platform))
+
+    def list_social_posts(self, platform):
+        return self._developer_call(lambda: self._social.posts(platform))
+
+    def preview_marketing(self, content, snapshot_ids):
+        def preview():
+            if not isinstance(content, str) or not 1 <= len(content.strip()) <= 20000:
+                raise ValueError("請先輸入 1–20,000 字元的提示詞。")
+            evidence = self._social.evidence(snapshot_ids)
+            token = secrets.token_urlsafe(24)
+            self._marketing_previews.clear()
+            self._marketing_previews[token] = (time.monotonic(), content, evidence)
+            return {'preview_id': token, 'content': content, 'evidence': evidence}
+        return self._developer_call(preview)
+
+    def optimize_marketing(self, preview_id, consent):
+        def optimize():
+            preview = self._marketing_previews.pop(preview_id, None)
+            if not preview or time.monotonic() - preview[0] > 900:
+                raise ValueError("預覽已過期，請重新選取數據。")
+            _, content, evidence = preview
+            result = self._cloud_advisor.marketing(content, evidence, consent)
+            with connect(self.repository.db_path) as db:
+                run_id = db.execute("INSERT INTO marketing_runs(created_at,source,evidence,result) VALUES(?,?,?,?)", (utc_now(), content, json.dumps(evidence, ensure_ascii=False), json.dumps(result, ensure_ascii=False))).lastrowid
+            return {**result, 'run_id': run_id, 'evidence': evidence}
+        return self._developer_call(optimize)
+
+    def apply_marketing(self, run_id, content, snapshot_ids):
+        def apply():
+            with connect(self.repository.db_path) as db:
+                row = db.execute("SELECT * FROM marketing_runs WHERE id=?", (run_id,)).fetchone()
+                if not row or row['source'] != content:
+                    raise ValueError("草稿已變更，請重新分析。")
+                evidence = json.loads(row['evidence'])
+                if sorted(snapshot_ids) != sorted(item['snapshot_id'] for item in evidence):
+                    raise ValueError("參考貼文已變更，請重新分析。")
+                for item in evidence:
+                    latest = db.execute("SELECT MAX(id) FROM social_snapshots WHERE platform=? AND post_id=?", (item['platform'], item['post_id'])).fetchone()[0]
+                    if latest != item['snapshot_id']:
+                        raise ValueError("數據已更新或清除，請重新分析。")
+            return {'content': json.loads(row['result'])['optimized']}
+        return self._developer_call(apply)
 
     def get_cloud_settings(self):
         return self._safe_call(self._cloud_advisor.status)
@@ -52,10 +186,22 @@ class DesktopApi:
         return self._safe_call(lambda: self._cloud_advisor.configure(request))
 
     def analyze_with_ai(self, request):
-        return self._safe_call(lambda: self._cloud_advisor.analyze(request))
+        return self._developer_call(lambda: self._cloud_advisor.analyze(request))
 
     def optimize_with_ai(self, request):
-        return self._safe_call(lambda: self._cloud_advisor.optimize(request))
+        return self._developer_call(lambda: self._cloud_advisor.optimize(request))
+
+    def optimize_prompt_section(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.optimize_section(request))
+
+    def draft_document_field(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.draft_document_field(request))
+
+    def clarify_document(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.clarify_document(request))
+
+    def compose_document(self, request):
+        return self._safe_call(lambda: self._cloud_advisor.compose_document(request))
 
     def attach_window(self, window) -> None:
         self.window = window
@@ -66,6 +212,8 @@ class DesktopApi:
     def _safe_call(self, callback):
         try:
             return self._response(callback())
+        except zlib.error:
+            return self._response(error="程式模組解壓縮失敗，可能是 App 執行期間檔案已被更新。請先儲存草稿，完全結束 App 後重新開啟；若仍失敗，請重新解壓完整安裝包。")
         except (OSError, ValueError, KeyError) as exc:
             return self._response(error=str(exc))
 
@@ -90,7 +238,7 @@ class DesktopApi:
         return str(self._project_path(value))
 
     def _target_path(self, project: Path, relative_path: str, *, must_exist: bool = False) -> Path:
-        if not relative_path or Path(relative_path).is_absolute() or Path(relative_path).suffix.lower() != ".md":
+        if not relative_path or Path(relative_path).is_absolute() or Path(relative_path).suffix.lower() not in {".md", ".markdown"}:
             raise ValueError("只能操作專案內的相對 Markdown 路徑。")
         target = project / relative_path
         if ".." in Path(relative_path).parts or target.is_symlink():
@@ -186,6 +334,38 @@ class DesktopApi:
             return {"filename": target.name, "path": str(target), "bytes": len(compiled.encode("utf-8"))}
         return self._safe_call(choose)
 
+    def preview_document_project(self, documents):
+        return self._safe_call(lambda: project_files(documents))
+
+    def export_document_file(self, document_type, content):
+        def export():
+            names = {'core': 'AGENTS', 'memory': 'CONTEXT', 'skill': 'SKILL'}
+            if document_type not in names:
+                raise ValueError('請選擇文件類型。')
+            if document_type == 'skill':
+                skill_name(content)
+            return self.export_prompt_file(names[document_type], content)
+        try:
+            return export()
+        except (ValueError, TypeError) as error:
+            return {'ok': False, 'error': str(error)}
+
+    def export_document_project(self, title, documents):
+        def choose():
+            files = project_files(documents)
+            if self.window is None:
+                raise ValueError('請在桌面 App 選擇輸出資料夾。')
+            import webview
+            selected = self.window.create_file_dialog(webview.FOLDER_DIALOG)
+            if not selected:
+                return None
+            raw = selected[0] if isinstance(selected, (tuple, list)) else selected
+            parent = Path(str(raw)).expanduser().resolve(strict=True)
+            if not parent.is_dir():
+                raise ValueError('請選擇有效資料夾。')
+            return write_project(parent, safe_export_filename(str(title)), files)
+        return self._safe_call(choose)
+
     def set_project_root(self, root: str) -> dict:
         return self._safe_call(lambda: str(self._authorize_root(root)))
 
@@ -225,6 +405,12 @@ class DesktopApi:
 
     def save_prompt(self, request: dict) -> dict:
         return self._safe_call(lambda: self.prompts.save(self._prompt_scope(request["project_path"]), request))
+
+    def load_prompt_draft(self, project_path: str) -> dict:
+        return self._safe_call(lambda: self.prompts.load_draft(self._prompt_scope(project_path)))
+
+    def save_prompt_draft(self, request: dict) -> dict:
+        return self._safe_call(lambda: self.prompts.save_draft(self._prompt_scope(request["project_path"]), request))
 
     def list_prompt_versions(self, project_path: str, prompt_id: int) -> dict:
         return self._safe_call(lambda: self.prompts.history(self._prompt_scope(project_path), prompt_id))
@@ -402,4 +588,4 @@ class DesktopApi:
         return self._safe_call(restore)
 
     def run_memory_health_check(self, project_path: str, agent_id: str) -> dict:
-        return self._safe_call(lambda: run_memory_health_check(self._project_path(project_path), agent_id))
+        return self._developer_call(lambda: run_memory_health_check(self._project_path(project_path), agent_id))

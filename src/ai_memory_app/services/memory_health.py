@@ -141,7 +141,7 @@ def run_memory_health_check(project_path: Path, agent_id: str, working_directory
         "agent_id": agent_id,
         "agent_name": agent["name"],
         "issues": issues,
-        "files": [{**info, 'issues': [issue for issue in issues if issue['path'] == info['relative_path']]} for info in scan['files'] if any(issue['path'] == info['relative_path'] for issue in issues)],
+        "files": [{**info, 'issues': [issue for issue in issues if issue['path'] == info['relative_path']]} for info in scan['files']],
         "scan_warnings": scan['warnings'],
         "scope_note": '僅掃描所選專案的 Markdown（含 SKILL.md）；排除 .git、依賴、建置與 symlink。規則式檢查可能誤報或漏報，無法判定所有語意衝突與不必要內容。',
         "summary": {

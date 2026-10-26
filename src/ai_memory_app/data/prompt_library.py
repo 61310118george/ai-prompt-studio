@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+
 from .database import connect, utc_now
 from ..services.prompt_workbench import validate_text
+from ..services.document_project import validate_document_state
 
 
 class PromptLibrary:
@@ -9,6 +12,28 @@ class PromptLibrary:
 
     def __init__(self, db_path):
         self.db_path = db_path
+
+    def load_draft(self, project_path: str) -> dict | None:
+        with connect(self.db_path) as db:
+            row = db.execute("SELECT payload FROM prompt_drafts WHERE project_path=?", (project_path,)).fetchone()
+        return json.loads(row["payload"]) if row else None
+
+    def save_draft(self, project_path: str, request: dict) -> dict:
+        draft = {key: str(request.get(key, "")) for key in ("title", "category", "tags")}
+        if len(draft["title"]) > 20 or len(draft["category"]) > 100 or len(draft["tags"]) > 500:
+            raise ValueError("草稿欄位長度超過限制。")
+        draft["content"] = validate_text(request.get("content", ""))
+        draft["tool"] = request.get("tool", "codex")
+        if draft["tool"] not in {"codex", "claude"}:
+            raise ValueError("請選擇 Codex 或 Claude Code。")
+        draft["imported"] = bool(request.get("imported", False))
+        if 'document_state' in request:
+            draft['document_state'] = validate_document_state(request['document_state'])
+        with connect(self.db_path) as db:
+            db.execute("INSERT INTO prompt_drafts(project_path,payload,updated_at) VALUES(?,?,?) "
+                       "ON CONFLICT(project_path) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at",
+                       (project_path, json.dumps(draft, ensure_ascii=False), utc_now()))
+        return draft
 
     def list(self, project_path: str, query: str = "", category: str = "", archived: bool = False) -> list[dict]:
         with connect(self.db_path) as db:
@@ -24,6 +49,7 @@ class PromptLibrary:
             raise ValueError("請填寫 1–20 字的標題與非空白內容。")
         category = str(request.get("category", "一般"))[:100]
         tags = str(request.get("tags", ""))[:500]
+        document_state = json.dumps(validate_document_state(request.get('document_state')), ensure_ascii=False)
         with connect(self.db_path) as db:
             db.execute("BEGIN IMMEDIATE")
             item_id = request.get("id")
@@ -38,6 +64,8 @@ class PromptLibrary:
             else:
                 item_id = db.execute("INSERT INTO prompt_library(project_path,title,content,category,tags,version,archived,created_at,updated_at) VALUES(?,?,?,?,?,1,0,?,?)", (project_path, title, content, category, tags, now, now)).lastrowid
             db.execute("INSERT INTO prompt_revisions(prompt_id,version,title,content,category,tags,created_at) VALUES(?,?,?,?,?,?,?)", (item_id, version, title, content, category, tags, now))
+            db.execute('UPDATE prompt_library SET document_state=? WHERE id=?', (document_state, item_id))
+            db.execute('UPDATE prompt_revisions SET document_state=? WHERE prompt_id=? AND version=?', (document_state, item_id, version))
             return dict(db.execute("SELECT * FROM prompt_library WHERE id=?", (item_id,)).fetchone())
 
     def history(self, project_path: str, item_id: int) -> list[dict]:
@@ -62,8 +90,6 @@ class PromptLibrary:
         for name in used:
             if name not in names:
                 names.append(name)
-        if self.DEFAULT_GROUP not in names:
-            names.append(self.DEFAULT_GROUP)
         return [{"name": name, "sort_order": index} for index, name in enumerate(names)]
 
     def create_group(self, project_path: str, name: str) -> dict:
@@ -177,8 +203,9 @@ class PromptLibrary:
 
     def delete_group(self, project_path: str, name: str, builtin_template_keys: list[str] | None = None) -> dict:
         name = str(name or "").strip()
-        if not name or name == self.DEFAULT_GROUP:
-            raise ValueError("「一般」是預設群組，不能刪除。")
+        if not name:
+            raise ValueError("請選擇要刪除的群組。")
+        fallback = "未分類" if name == self.DEFAULT_GROUP else self.DEFAULT_GROUP
         builtin_template_keys = list(dict.fromkeys(str(key).strip() for key in (builtin_template_keys or []) if str(key).strip()))
         if any(len(key) > 80 for key in builtin_template_keys):
             raise ValueError("內建範本識別碼不正確。")
@@ -194,7 +221,7 @@ class PromptLibrary:
                 raise ValueError("找不到要刪除的群組。")
             moved = db.execute(
                 "UPDATE prompt_library SET category=?, updated_at=? WHERE project_path=? AND category=?",
-                (self.DEFAULT_GROUP, utc_now(), project_path, name),
+                (fallback, utc_now(), project_path, name),
             ).rowcount
             now = utc_now()
             stored_keys = [str(row["template_key"]) for row in db.execute(
@@ -206,18 +233,18 @@ class PromptLibrary:
                 db.execute(
                     "INSERT INTO prompt_template_preferences(project_path,template_key,category,hidden,updated_at) VALUES(?,?,?,?,?) "
                     "ON CONFLICT(project_path,template_key) DO UPDATE SET category=excluded.category,updated_at=excluded.updated_at",
-                    (project_path, key, self.DEFAULT_GROUP, 0, now),
+                    (project_path, key, fallback, 0, now),
                 )
             append_after = db.execute(
                 "SELECT COALESCE(MAX(sort_order), -1) + 1 AS value FROM prompt_card_order WHERE project_path=? AND group_name=?",
-                (project_path, self.DEFAULT_GROUP),
+                (project_path, fallback),
             ).fetchone()["value"]
             db.execute(
                 "UPDATE prompt_card_order SET group_name=?,sort_order=sort_order+?,updated_at=? WHERE project_path=? AND group_name=?",
-                (self.DEFAULT_GROUP, append_after, now, project_path, name),
+                (fallback, append_after, now, project_path, name),
             )
             db.execute("DELETE FROM prompt_groups WHERE project_path=? AND name=?", (project_path, name))
-        return {"name": name, "moved_prompts": moved, "moved_templates": len(moved_keys), "fallback_group": self.DEFAULT_GROUP}
+        return {"name": name, "moved_prompts": moved, "moved_templates": len(moved_keys), "fallback_group": fallback}
 
     def delete(self, project_path: str, item_id: int) -> dict:
         with connect(self.db_path) as db:
