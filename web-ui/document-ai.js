@@ -1,4 +1,4 @@
-import { DOCUMENT_FIELDS } from './document-catalog.js';
+import { fieldsFor } from './document-catalog.js';
 
 export function mountDocumentAi({bridge, snapshot, onApply, status, busyChanged}) {
   const dialog=document.createElement('dialog');
@@ -30,7 +30,7 @@ export function mountDocumentAi({bridge, snapshot, onApply, status, busyChanged}
     if(mode==='revise'&&!content.trim()){status.textContent='請先填寫要修正的欄位內容。';return;}
     const disclosure=mode==='revise'?'標題、標籤與這一欄的內容':'標題、標籤與文件類型';
     if(!window.confirm(`將${disclosure}傳送至 Gemini，分析理解並產生確認問題？不傳送其他文件，可能產生 API 費用。`))return;
-    request={mode,field_id:fieldId,title:source.title,tags:source.tags,document_type:source.document_type,
+    request={mode,field_id:fieldId,schema_version:source.schema_version,major:source.major,minor:source.minor,title:source.title,tags:source.tags,document_type:source.document_type,
       guidance:source.guidance,content:mode==='revise'?content:'',consent:true};
     const generation=++epoch;clearResult();setBusy(true);status.textContent='AI 正在分析理解與確認問題…';
     try{
@@ -64,7 +64,7 @@ export function mountDocumentAi({bridge, snapshot, onApply, status, busyChanged}
       result=data.fields;
       for(const [key,value] of Object.entries(result)){
         const section=document.createElement('section'), heading=document.createElement('h4');
-        heading.textContent=DOCUMENT_FIELDS[source.document_type].find(field=>field.id===key).label;
+        heading.textContent=fieldsFor(source.document_type,source.fields,source.major,source.minor?[source.minor]:[]).find(field=>field.id===key)?.label||key;
         const columns=document.createElement('div');columns.className='ai-comparison';
         for(const [label,text] of [['修改前',source.fields[key]||'（空白）'],['修改後',value]]){
           const column=document.createElement('div'), caption=document.createElement('strong'), body=document.createElement('pre');

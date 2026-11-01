@@ -42,7 +42,7 @@ class DeveloperMode:
                 raise ValueError("密碼錯誤次數過多，請稍後再試。")
             valid = False
             if isinstance(password, str) and len(password) <= 128:
-                valid = hmac.compare_digest(password.encode('utf-8'), b'61310118')
+                valid = hmac.compare_digest(password.encode('utf-8'), b'5830485')
             record['failures'] = 0 if valid else record.get('failures', 0) + 1
             record['blocked_until'] = time.time() + 60 if record['failures'] >= 5 else 0
             if record['failures'] >= 5:

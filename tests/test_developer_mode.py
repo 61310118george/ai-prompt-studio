@@ -15,7 +15,7 @@ def api(tmp_path):
 
 
 def setup(api):
-    assert api.unlock_developer_mode('61310118')['data']['enabled']
+    assert api.unlock_developer_mode('5830485')['data']['enabled']
 
 
 def test_fixed_password_restart_and_lock(api):
@@ -25,10 +25,12 @@ def test_fixed_password_restart_and_lock(api):
     # An existing installation's old password must no longer control access.
     with connect(api.repository.db_path) as db:
         db.execute("INSERT INTO settings(key,value,updated_at) VALUES('developer_mode_password',?, '')", (json.dumps({'digest':'old-value'}),))
+    assert not api.unlock_developer_mode('61310118')['ok']
+    assert not api.get_developer_status()['data']['enabled']
     setup(api)
     with connect(api.repository.db_path) as db:
         stored = db.execute("SELECT value FROM settings WHERE key='developer_mode_attempts'").fetchone()[0]
-    assert '61310118' not in stored
+    assert '5830485' not in stored
     fresh = DesktopApi(MemoryRepository(api.repository.db_path))
     assert not fresh.get_developer_status()['data']['enabled']
     assert not fresh.unlock_developer_mode('incorrect-password')['ok']
@@ -66,7 +68,7 @@ def test_cooldown_persists(api):
         assert not api.unlock_developer_mode('incorrect-password')['ok']
     fresh = DesktopApi(MemoryRepository(api.repository.db_path))
     assert fresh.get_developer_status()['data']['retry_after'] > 0
-    assert not fresh.unlock_developer_mode('61310118')['ok']
+    assert not fresh.unlock_developer_mode('5830485')['ok']
 
 
 def test_locked_inflight_result_is_discarded(api):

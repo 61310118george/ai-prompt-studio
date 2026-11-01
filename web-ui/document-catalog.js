@@ -17,7 +17,7 @@ export const TOPIC_GUIDANCE = {
   '推廣行銷/分析市場':'研究問題、地區、期間、受眾、競爭對象、來源與證據限制',
   '推廣行銷/行銷顧問':'商業目標、現況數據、渠道、預算、可用資源與成效衡量',
 };
-export const DOCUMENT_FIELDS = {
+export const LEGACY_FIELDS = {
   core:[
     {id:'purpose',label:'專案目標與範圍',question:'希望 AI 協助完成什麼？哪些工作不在這次範圍？'},
     {id:'rules',label:'固定規則與禁止事項',question:'每次工作都必須遵守什麼？哪些修改或宣稱不能做？'},
@@ -38,23 +38,46 @@ export const DOCUMENT_FIELDS = {
   ],
 };
 
+let catalog=null;
+export function configureDocumentProfiles(value) {
+  if(value?.version!==2||!value.profiles?.['']?.core)throw Error('文件題庫格式不正確');
+  catalog=value;
+}
+export function profileKey(major='', minors=[]) { return minors[0]?`${major}/${minors[0]}`:major; }
+export function documentProfile(type,major='',minors=[]) {
+  if(!catalog)throw Error('文件題庫尚未載入');
+  const fields=catalog.profiles[profileKey(major,minors)]?.[type];
+  if(!fields)throw Error('找不到對應文件分類');
+  return fields;
+}
+export function profileNote(type) { return catalog?.notes?.[type]||''; }
+export function fieldsFor(type, fields={},major='',minors=[]) {
+  const schema=documentProfile(type,major,minors), ids=new Set(schema.map(field=>field.id));
+  return [...schema,...(LEGACY_FIELDS[type]||[]).filter(field=>!ids.has(field.id)&&fields[field.id]?.trim())
+    .map(field=>({...field,group:'舊版補充',section:'舊版保留內容',example:'原有答案會保留，不會自動轉成新題目的事實。'}))];
+}
 export function topicContext(major, minors) {
   return minors.map(minor=>TOPIC_GUIDANCE[`${major}/${minor}`]).filter(Boolean).join('；');
 }
-
 export function compileDocument(type, title, fields, tags, skillName='project-workflow') {
-  const schema = DOCUMENT_FIELDS[type];
-  if(!schema)throw Error('請先選擇文件類型。');
+  const parts=(tags||'').split(','), major=TOPICS[parts[0]]?parts[0]:'', minor=parts.find(part=>part.startsWith(major+'/'))?.slice(major.length+1);
+  const schema=fieldsFor(type,fields,major,minor?[minor]:[]);
   if(!title.trim())throw Error('請先填寫標題。');
-  if(!schema.some(field=>fields[field.id]?.trim()))throw Error('請至少填寫一個內容欄位，或使用右側 AI 協助撰寫。');
+  if(!schema.some(field=>fields[field.id]?.trim()))throw Error('請先回答需求問題，或使用 AI 輔助撰寫。');
   let prefix='';
   if(type==='skill') {
     if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(skillName)||skillName.length>64)throw Error('技能識別名稱限 1–64 字的小寫英數與單一連字號。');
     if(/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/.test(skillName))throw Error('技能識別名稱不可使用 Windows 保留名稱。');
-    if(!fields.trigger?.trim()||!fields.steps?.trim())throw Error('技能必須填寫「用途與使用時機」及「執行步驟」。');
-    if(fields.trigger.trim().length>1024)throw Error('技能用途與使用時機請保持在 1,024 字以內。');
+    if(!fields.trigger?.trim()||!(fields.task||fields.steps)?.trim())throw Error('技能必須填寫「用途與觸發時機」和「可重複的操作步驟」。');
+    if(fields.trigger.trim().length>1024)throw Error('技能用途與觸發時機請保持在 1,024 字以內。');
     prefix=`---\nname: ${JSON.stringify(skillName)}\ndescription: ${JSON.stringify(fields.trigger.trim())}\n---\n\n`;
   }
-  const sections=schema.filter(field=>fields[field.id]?.trim()).map(field=>`## ${field.label}\n\n${fields[field.id].trim()}`);
-  return `${prefix}# ${title.trim()}\n\n${tags?`用途：${tags}\n\n`:''}${sections.join('\n\n')}\n`;
+  const sections=new Map();
+  for(const field of schema){
+    if(!sections.has(field.section))sections.set(field.section,[]);
+    const text=fields[field.id]?.trim()||'[待確認]';
+    sections.get(field.section).push(`### ${field.label}\n\n${text}`);
+  }
+  const body=[...sections].map(([heading,items])=>`## ${heading}\n\n${items.join('\n\n')}`).join('\n\n');
+  return `${prefix}# ${title.trim()}\n\n${tags?`用途：${tags}\n\n`:''}${body}\n`;
 }

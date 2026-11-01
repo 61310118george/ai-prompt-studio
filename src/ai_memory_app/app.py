@@ -14,7 +14,7 @@ def check_document_ai() -> int:
     import io
     from types import SimpleNamespace
     from .services.cloud_advisor import CloudAdvisor
-    from .services.document_assistance import FIELDS
+    from .services.document_profiles import profile_fields
 
     advisor = CloudAdvisor(SimpleNamespace(load=lambda: 'packaging-test-only'))
 
@@ -29,10 +29,12 @@ def check_document_ai() -> int:
 
     advisor._open = reply  # No network, user credentials, database, or paid requests.
     checked = 0
-    for kind, fields in FIELDS.items():
+    for kind in ('core', 'memory', 'skill'):
+        fields = {item['id']: item['label'] for item in profile_fields(kind, '開發程式', '寫網頁')}
         for mode in ('write', 'revise'):
             field = next(iter(fields))
-            request = {'consent': True, 'mode': mode, 'document_type': kind,
+            request = {'consent': True, 'mode': mode, 'document_type': kind, 'schema_version': 2,
+                       'major': '開發程式', 'minor': '寫網頁',
                        'title': '打包檢查', 'field_id': field, 'content': '保留原意。'}
             review = advisor.clarify_document(request)
             result = advisor.compose_document({**request, 'clarification': review, 'answers': ['正確']})

@@ -79,6 +79,10 @@ class DesktopApi:
     def get_prompt_tag_catalog(self):
         return self._safe_call(self._csv_import.catalog)
 
+    def get_document_profiles(self):
+        from .document_profiles import load_document_profiles
+        return self._safe_call(load_document_profiles)
+
     def preview_csv_import(self, kind, project_path):
         def choose():
             scope = self._prompt_scope(project_path)

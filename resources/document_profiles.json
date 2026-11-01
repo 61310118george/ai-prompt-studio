@@ -1,0 +1,2623 @@
+{
+  "version": 2,
+  "checked": "2026-11-01",
+  "notes": {
+    "core": "核心文件用來告訴 AI 這個專案要做什麼、要遵守哪些規則，以及怎樣才算完成，讓之後的工作有一致的方向。",
+    "memory": "AI 記憶用來整理專案背景、已做的決定和目前進度。之後把文件提供給 AI，就能更快接續工作，不用每次重新說明。",
+    "skill": "技能 Skill 用來把經常重複的工作寫成一套做法，告訴 AI 何時使用、怎麼做，以及最後要交出什麼。",
+    "project": "專案會帶你依序建立核心文件、AI 記憶和技能 Skill，把工作規則、背景資料與操作步驟整理好，最後一起輸出成資料夾。"
+  },
+  "profiles": {
+    "開發程式/寫網頁": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "這個網站給誰看、提供什麼服務？希望 AI 幫忙設計畫面、製作功能，還是兩者都做？",
+          "example": "UI UX 設計師與前端工程師；網站訪客、主要頁面與使用流程",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "有現成的網站、畫面草稿或指定工具嗎？知道的話可以補充（例如 PHP、WordPress）；不知道也沒關係。",
+          "example": "現有網站、設計稿、技術版本與測試指令",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "網站需要哪些頁面和功能？例如介紹服務、填表或預約。這次有哪些事情先不做？",
+          "example": "做可預約的服務介紹頁；暫不做付款",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "你希望先看畫面草稿，還是先做出能操作的版本？做到哪裡要先給你確認？",
+          "example": "先確認頁面與操作流程，再實作與測試；交付：頁面程式、修改清單及操作測試結果",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "有什麼特別在意或不能改的地方？例如手機好閱讀、開啟速度，或讓搜尋引擎容易找到（SEO）。",
+          "example": "重視搜尋可見度；不可承諾排名或擅換框架",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會用手機還是電腦檢查網站？哪些功能能正常使用，就代表這次完成了？",
+          "example": "手機可閱讀、鍵盤可操作、表單錯誤提示正確；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "這個網站給誰看、提供什麼服務？希望 AI 幫忙設計畫面、製作功能，還是兩者都做？",
+          "example": "網站訪客、主要頁面與使用流程",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "有現成的網站、畫面草稿或指定工具嗎？知道的話可以補充（例如 PHP、WordPress）；不知道也沒關係。",
+          "example": "現有網站、設計稿、技術版本與測試指令；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "寫網頁目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "做可預約的服務介紹頁；暫不做付款；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於寫網頁，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定使用原生 PHP；金流暫不納入",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "有什麼特別在意或不能改的地方？例如手機好閱讀、開啟速度，或讓搜尋引擎容易找到（SEO）。",
+          "example": "重視搜尋可見度；不可承諾排名或擅換框架",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "寫網頁有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：現有網站、設計稿、技術版本與測試指令；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "這個網站給誰看、提供什麼服務？希望 AI 幫忙設計畫面、製作功能，還是兩者都做？",
+          "example": "UI UX 設計師與前端工程師；網站訪客、主要頁面與使用流程",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套寫網頁的做法？哪些情況不要用？",
+          "example": "使用者提出新增頁面或調整網站介面時，協助產出頁面程式、修改清單及操作測試結果",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "有現成的網站、畫面草稿或指定工具嗎？知道的話可以補充（例如 PHP、WordPress）；不知道也沒關係。開始前還需要你提供什麼？",
+          "example": "現有網站、設計稿、技術版本與測試指令；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "你希望先看畫面草稿，還是先做出能操作的版本？做到哪裡要先給你確認？",
+          "example": "先確認頁面與操作流程，再實作與測試",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會用手機還是電腦檢查網站？哪些功能能正常使用，就代表這次完成了？",
+          "example": "頁面程式、修改清單及操作測試結果；檢查：手機可閱讀、鍵盤可操作、表單錯誤提示正確",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "有什麼特別在意或不能改的地方？例如手機好閱讀、開啟速度，或讓搜尋引擎容易找到（SEO）。",
+          "example": "重視搜尋可見度；不可承諾排名或擅換框架；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個寫網頁的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：服務介紹與預約需求。輸出：頁面結構及表單驗收清單",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "開發程式/開發遊戲": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "這款遊戲給誰玩、用手機還是電腦玩？希望 AI 幫你想玩法、做畫面，還是寫程式？",
+          "example": "遊戲企劃與玩法程式設計師；玩家年齡、平台、操作方式與遊戲類型",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "有指定的製作工具、圖片或音效嗎？知道工具名稱可以補充（例如 Unity）；還沒決定也可以。",
+          "example": "引擎版本、素材授權、現有玩法與測試場景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "玩家主要要做什麼、怎樣算贏或輸？這次先做哪些關卡，哪些之後再做？",
+          "example": "製作單人闖關原型；暫不加入連線對戰",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "你想先試玩哪個部分？哪些內容要等你玩過、確認後再繼續做？",
+          "example": "先定核心循環，再做最小可玩原型與測試；交付：可執行原型、操作說明及測試紀錄",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "有哪些規則不能改？圖片或音效能不能使用，遊戲會不會卡，哪些需要特別注意？",
+          "example": "未授權素材不可使用；效能目標需實測",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會在哪種手機或電腦上試玩？哪些操作、關卡和存檔功能都正常，才算完成？",
+          "example": "可完成一局、勝負判定一致、目標裝置運行順暢；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "這款遊戲給誰玩、用手機還是電腦玩？希望 AI 幫你想玩法、做畫面，還是寫程式？",
+          "example": "玩家年齡、平台、操作方式與遊戲類型",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "有指定的製作工具、圖片或音效嗎？知道工具名稱可以補充（例如 Unity）；還沒決定也可以。",
+          "example": "引擎版本、素材授權、現有玩法與測試場景；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "開發遊戲目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "製作單人闖關原型；暫不加入連線對戰；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於開發遊戲，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定鍵盤操作；多人模式仍待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "有哪些規則不能改？圖片或音效能不能使用，遊戲會不會卡，哪些需要特別注意？",
+          "example": "未授權素材不可使用；效能目標需實測",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "開發遊戲有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：引擎版本、素材授權、現有玩法與測試場景；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "這款遊戲給誰玩、用手機還是電腦玩？希望 AI 幫你想玩法、做畫面，還是寫程式？",
+          "example": "遊戲企劃與玩法程式設計師；玩家年齡、平台、操作方式與遊戲類型",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套開發遊戲的做法？哪些情況不要用？",
+          "example": "使用者要求新增玩法、關卡或檢查遊戲錯誤時，協助產出可執行原型、操作說明及測試紀錄",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "有指定的製作工具、圖片或音效嗎？知道工具名稱可以補充（例如 Unity）；還沒決定也可以。開始前還需要你提供什麼？",
+          "example": "引擎版本、素材授權、現有玩法與測試場景；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "你想先試玩哪個部分？哪些內容要等你玩過、確認後再繼續做？",
+          "example": "先定核心循環，再做最小可玩原型與測試",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會在哪種手機或電腦上試玩？哪些操作、關卡和存檔功能都正常，才算完成？",
+          "example": "可執行原型、操作說明及測試紀錄；檢查：可完成一局、勝負判定一致、目標裝置運行順暢",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "有哪些規則不能改？圖片或音效能不能使用，遊戲會不會卡，哪些需要特別注意？",
+          "example": "未授權素材不可使用；效能目標需實測；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個開發遊戲的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：收集道具闖關玩法。輸出：核心循環、實作步驟與勝負測試",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "開發程式/開發 app": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "誰會在什麼時候使用這個 App？主要用在手機、電腦，還是兩者都要？",
+          "example": "產品設計師與跨平台工程師；目標使用者、裝置、作業系統與主要操作",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "希望在哪些系統使用（例如 Windows、macOS、Android）？有指定工具或要連接的服務嗎？不清楚可以先留待確認。",
+          "example": "系統版本、資料結構、API 文件與權限需求",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "使用者打開 App 後，要能做哪些事？需要登入、通知，或沒有網路也能使用嗎？",
+          "example": "建立離線待辦 App；暫不做帳號同步",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "你想先確認畫面，還是先試用主要功能？做到哪一步要先給你看？",
+          "example": "先確認資料流程，再實作、測試與打包；交付：可安裝 App、操作說明及各平台驗收表",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "哪些資料需要保密或保留下來？App 要使用相機、位置等功能前，有什麼需要先確認？",
+          "example": "只申請必要權限；不得覆蓋使用者既有資料",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "安裝、關閉再開啟後，哪些功能和資料都要正常？你會用哪些裝置試用？",
+          "example": "離線可新增、重開資料保留、拒絕權限仍有提示；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "誰會在什麼時候使用這個 App？主要用在手機、電腦，還是兩者都要？",
+          "example": "目標使用者、裝置、作業系統與主要操作",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "希望在哪些系統使用（例如 Windows、macOS、Android）？有指定工具或要連接的服務嗎？不清楚可以先留待確認。",
+          "example": "系統版本、資料結構、API 文件與權限需求；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "開發 app目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "建立離線待辦 App；暫不做帳號同步；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於開發 app，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定資料存本機；雲端同步待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "哪些資料需要保密或保留下來？App 要使用相機、位置等功能前，有什麼需要先確認？",
+          "example": "只申請必要權限；不得覆蓋使用者既有資料",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "開發 app有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：系統版本、資料結構、API 文件與權限需求；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "誰會在什麼時候使用這個 App？主要用在手機、電腦，還是兩者都要？",
+          "example": "產品設計師與跨平台工程師；目標使用者、裝置、作業系統與主要操作",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套開發 app的做法？哪些情況不要用？",
+          "example": "使用者需要新增 App 功能、修正流程或打包時，協助產出可安裝 App、操作說明及各平台驗收表",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "希望在哪些系統使用（例如 Windows、macOS、Android）？有指定工具或要連接的服務嗎？不清楚可以先留待確認。開始前還需要你提供什麼？",
+          "example": "系統版本、資料結構、API 文件與權限需求；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "你想先確認畫面，還是先試用主要功能？做到哪一步要先給你看？",
+          "example": "先確認資料流程，再實作、測試與打包",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "安裝、關閉再開啟後，哪些功能和資料都要正常？你會用哪些裝置試用？",
+          "example": "可安裝 App、操作說明及各平台驗收表；檢查：離線可新增、重開資料保留、拒絕權限仍有提示",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "哪些資料需要保密或保留下來？App 要使用相機、位置等功能前，有什麼需要先確認？",
+          "example": "只申請必要權限；不得覆蓋使用者既有資料；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個開發 app的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：離線待辦需求。輸出：畫面流程、資料規格與跨平台測試",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "撰寫企劃/撰寫文案": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "這份文字要給誰看、用在哪裡？你希望用它提案、解釋事情，還是整理重點？",
+          "example": "內容編輯與提案撰寫者；文件讀者、使用場合與閱讀程度",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "有可以參考的文件、訪談或舊稿嗎？哪些內容已經確認，可以直接使用？",
+          "example": "訪談紀錄、產品資料、既有稿件與參考來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "最想讓讀者理解什麼？希望寫多長、包含哪些重點，看完後做什麼？",
+          "example": "將內訓資料整理為提案摘要，不撰寫廣告",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "你想先確認大綱，還是先看一版草稿？哪些內容需要先查證或請人看過？",
+          "example": "先核對素材，再整理大綱、撰稿與校對；交付：一頁摘要，含問題、建議與下一步",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "希望文字親切、正式，還是簡短直接？有哪些詞不能用、資料不能公開，或原句不能改？",
+          "example": "不捏造案例或引言；專有名詞須一致",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "文章有哪些重點一定要寫到？長度、格式有什麼要求，最後由誰確認？",
+          "example": "主張有依據、段落清楚、符合字數與語氣；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "這份文字要給誰看、用在哪裡？你希望用它提案、解釋事情，還是整理重點？",
+          "example": "文件讀者、使用場合與閱讀程度",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "有可以參考的文件、訪談或舊稿嗎？哪些內容已經確認，可以直接使用？",
+          "example": "訪談紀錄、產品資料、既有稿件與參考來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "撰寫文案目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "將內訓資料整理為提案摘要，不撰寫廣告；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於撰寫文案，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已確認受眾為內部主管；篇幅上限待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "希望文字親切、正式，還是簡短直接？有哪些詞不能用、資料不能公開，或原句不能改？",
+          "example": "不捏造案例或引言；專有名詞須一致",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "撰寫文案有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：訪談紀錄、產品資料、既有稿件與參考來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "這份文字要給誰看、用在哪裡？你希望用它提案、解釋事情，還是整理重點？",
+          "example": "內容編輯與提案撰寫者；文件讀者、使用場合與閱讀程度",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套撰寫文案的做法？哪些情況不要用？",
+          "example": "使用者提供素材並要求整理企劃文字或潤稿時，協助產出一頁摘要，含問題、建議與下一步",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "有可以參考的文件、訪談或舊稿嗎？哪些內容已經確認，可以直接使用？開始前還需要你提供什麼？",
+          "example": "訪談紀錄、產品資料、既有稿件與參考來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "你想先確認大綱，還是先看一版草稿？哪些內容需要先查證或請人看過？",
+          "example": "先核對素材，再整理大綱、撰稿與校對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "文章有哪些重點一定要寫到？長度、格式有什麼要求，最後由誰確認？",
+          "example": "一頁摘要，含問題、建議與下一步；檢查：主張有依據、段落清楚、符合字數與語氣",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "希望文字親切、正式，還是簡短直接？有哪些詞不能用、資料不能公開，或原句不能改？",
+          "example": "不捏造案例或引言；專有名詞須一致；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個撰寫文案的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：會議重點。輸出：含現況、建議、待確認事項的一頁提案",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "撰寫企劃/專案企劃": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "這個企劃想解決誰的什麼問題？由誰決定、誰一起執行？",
+          "example": "專案經理與提案顧問；決策者、合作對象、現況問題與專案背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "目前有多少時間、人手和預算？有舊企劃或其他資料可以參考嗎？還不確定的可以註明。",
+          "example": "需求清單、可用資源、預算依據與時程資料",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次要完成什麼成果？哪些先不做？看到什麼改變，你會覺得有達到目標？",
+          "example": "規劃門市預約流程改善；不包含新店展店",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "工作想分成哪幾個階段？各由誰負責、什麼時候完成，哪些要先給你確認？",
+          "example": "先定問題與範圍，再拆工作、評估風險與驗收；交付：含目標、里程碑、負責人、成本與風險的企劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "有哪些費用不能超過、事情不能改？可能遇到什麼困難，改計畫前要先問誰？",
+          "example": "未知預算與日期標待確認，不自行承諾",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "最後由誰檢查成果、怎樣才算完成？時間或人手不夠時，希望怎麼處理？",
+          "example": "每項交付有負責人與驗收方式；估算有依據；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "這個企劃想解決誰的什麼問題？由誰決定、誰一起執行？",
+          "example": "決策者、合作對象、現況問題與專案背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "目前有多少時間、人手和預算？有舊企劃或其他資料可以參考嗎？還不確定的可以註明。",
+          "example": "需求清單、可用資源、預算依據與時程資料；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "專案企劃目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "規劃門市預約流程改善；不包含新店展店；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於專案企劃，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先試行一家店；正式上線日期待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "有哪些費用不能超過、事情不能改？可能遇到什麼困難，改計畫前要先問誰？",
+          "example": "未知預算與日期標待確認，不自行承諾",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "專案企劃有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：需求清單、可用資源、預算依據與時程資料；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "這個企劃想解決誰的什麼問題？由誰決定、誰一起執行？",
+          "example": "專案經理與提案顧問；決策者、合作對象、現況問題與專案背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套專案企劃的做法？哪些情況不要用？",
+          "example": "使用者需要從需求整理可執行專案計畫時，協助產出含目標、里程碑、負責人、成本與風險的企劃",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "目前有多少時間、人手和預算？有舊企劃或其他資料可以參考嗎？還不確定的可以註明。開始前還需要你提供什麼？",
+          "example": "需求清單、可用資源、預算依據與時程資料；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "工作想分成哪幾個階段？各由誰負責、什麼時候完成，哪些要先給你確認？",
+          "example": "先定問題與範圍，再拆工作、評估風險與驗收",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "最後由誰檢查成果、怎樣才算完成？時間或人手不夠時，希望怎麼處理？",
+          "example": "含目標、里程碑、負責人、成本與風險的企劃；檢查：每項交付有負責人與驗收方式；估算有依據",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "有哪些費用不能超過、事情不能改？可能遇到什麼困難，改計畫前要先問誰？",
+          "example": "未知預算與日期標待確認，不自行承諾；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個專案企劃的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：改善預約流程需求。輸出：工作拆解、里程碑及風險表",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "推廣行銷/撰寫文案": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "你想把品牌或服務介紹給誰？文字要放在哪裡，希望讀者看完後做什麼？",
+          "example": "品牌文案與社群編輯；目標受眾、品牌定位、發布平台與使用情境",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "有哪些確定可用的服務介紹、優惠或圖片？有喜歡的品牌文章可以參考嗎？",
+          "example": "服務資訊、已確認賣點、品牌語氣與可用素材",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "要寫幾篇、大約多長？最想傳達什麼，並請讀者做什麼（例如私訊或預約）？",
+          "example": "撰寫三則 IG 貼文，引導讀者詢問服務",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "要先確認讀者和開頭，再寫整篇嗎？哪些內容要先查證，寫完由誰看過？",
+          "example": "先核對受眾與事實，再寫開頭、內文與行動呼籲；交付：三則各 100 字內貼文，附標題、CTA 與圖片建議",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "有哪些效果、優惠或顧客評價不能寫？希望用什麼語氣，有沒有不能用的詞？",
+          "example": "不捏造見證、優惠或療效，不保證轉換成果",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "文章要符合哪些長度或格式要求？內容都確認正確後，由誰同意才能發布？",
+          "example": "資訊可查證、符合平台篇幅、每則只有一個主要 CTA；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "你想把品牌或服務介紹給誰？文字要放在哪裡，希望讀者看完後做什麼？",
+          "example": "目標受眾、品牌定位、發布平台與使用情境",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "有哪些確定可用的服務介紹、優惠或圖片？有喜歡的品牌文章可以參考嗎？",
+          "example": "服務資訊、已確認賣點、品牌語氣與可用素材；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "撰寫文案目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "撰寫三則 IG 貼文，引導讀者詢問服務；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於撰寫文案，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已確認語氣親切；促銷內容尚未核准",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "有哪些效果、優惠或顧客評價不能寫？希望用什麼語氣，有沒有不能用的詞？",
+          "example": "不捏造見證、優惠或療效，不保證轉換成果",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "撰寫文案有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：服務資訊、已確認賣點、品牌語氣與可用素材；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "你想把品牌或服務介紹給誰？文字要放在哪裡，希望讀者看完後做什麼？",
+          "example": "品牌文案與社群編輯；目標受眾、品牌定位、發布平台與使用情境",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套撰寫文案的做法？哪些情況不要用？",
+          "example": "使用者提供品牌素材並要求社群或廣告文案時，協助產出三則各 100 字內貼文，附標題、CTA 與圖片建議",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "有哪些確定可用的服務介紹、優惠或圖片？有喜歡的品牌文章可以參考嗎？開始前還需要你提供什麼？",
+          "example": "服務資訊、已確認賣點、品牌語氣與可用素材；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "要先確認讀者和開頭，再寫整篇嗎？哪些內容要先查證，寫完由誰看過？",
+          "example": "先核對受眾與事實，再寫開頭、內文與行動呼籲",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "文章要符合哪些長度或格式要求？內容都確認正確後，由誰同意才能發布？",
+          "example": "三則各 100 字內貼文，附標題、CTA 與圖片建議；檢查：資訊可查證、符合平台篇幅、每則只有一個主要 CTA",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "有哪些效果、優惠或顧客評價不能寫？希望用什麼語氣，有沒有不能用的詞？",
+          "example": "不捏造見證、優惠或療效，不保證轉換成果；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個撰寫文案的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：門市服務與受眾。輸出：貼文開頭、內文、預約詢問 CTA",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "推廣行銷/分析市場": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "你想了解哪個地區、哪一群客人的市場？想靠這次研究決定什麼，主要看哪段時間？",
+          "example": "市場研究員與資料分析師；研究決策者、目標地區、客群與研究期間",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "手上有調查、網站或同業資料嗎？知道的話請補充資料日期和調查人數，不知道可註明。",
+          "example": "資料來源、調查時間、樣本數與指標定義",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "你想比較哪些品牌或產品、弄清楚什麼問題？哪些事情這次先不研究？",
+          "example": "比較三家附近同類服務的定位與公開價格",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "想先找哪些資料，再怎麼比較？資料缺少或說法不同時，要先問你，還是列出待確認？",
+          "example": "先定研究問題，再蒐集來源、比較並列出限制；交付：競品比較表、附日期的來源清單與待驗證假設",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "哪些資料可能不完整或不夠可靠？哪些只是猜測，不能直接當成結論？",
+          "example": "不用單一小樣本推論整個市場；不得捏造數據",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "最後想看比較表還是文字報告？需要列出資料來源、日期和還無法確定的事情嗎？",
+          "example": "區分事實與推測；比較口徑一致，缺值不當零；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "你想了解哪個地區、哪一群客人的市場？想靠這次研究決定什麼，主要看哪段時間？",
+          "example": "研究決策者、目標地區、客群與研究期間",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "手上有調查、網站或同業資料嗎？知道的話請補充資料日期和調查人數，不知道可註明。",
+          "example": "資料來源、調查時間、樣本數與指標定義；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "分析市場目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "比較三家附近同類服務的定位與公開價格；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於分析市場，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已確定比較地區；市場規模尚無可靠資料",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "哪些資料可能不完整或不夠可靠？哪些只是猜測，不能直接當成結論？",
+          "example": "不用單一小樣本推論整個市場；不得捏造數據",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "分析市場有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：資料來源、調查時間、樣本數與指標定義；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "你想了解哪個地區、哪一群客人的市場？想靠這次研究決定什麼，主要看哪段時間？",
+          "example": "市場研究員與資料分析師；研究決策者、目標地區、客群與研究期間",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套分析市場的做法？哪些情況不要用？",
+          "example": "使用者需要比較市場、競品或整理研究證據時，協助產出競品比較表、附日期的來源清單與待驗證假設",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "手上有調查、網站或同業資料嗎？知道的話請補充資料日期和調查人數，不知道可註明。開始前還需要你提供什麼？",
+          "example": "資料來源、調查時間、樣本數與指標定義；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "想先找哪些資料，再怎麼比較？資料缺少或說法不同時，要先問你，還是列出待確認？",
+          "example": "先定研究問題，再蒐集來源、比較並列出限制",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "最後想看比較表還是文字報告？需要列出資料來源、日期和還無法確定的事情嗎？",
+          "example": "競品比較表、附日期的來源清單與待驗證假設；檢查：區分事實與推測；比較口徑一致，缺值不當零",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "哪些資料可能不完整或不夠可靠？哪些只是猜測，不能直接當成結論？",
+          "example": "不用單一小樣本推論整個市場；不得捏造數據；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個分析市場的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：研究地區與競品名單。輸出：定位比較表、來源及資料缺口",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "推廣行銷/行銷顧問": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "你的公司主要服務誰？現在最想改善的是讓更多人看到、有人詢問，還是有人購買？",
+          "example": "行銷策略顧問與實驗規劃者；企業階段、受眾、營運瓶頸與現有渠道",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "目前在哪些地方宣傳、花多少錢？有觀看、詢問或購買的數字嗎？沒有也可以直接說。",
+          "example": "目前流量、詢問與預約數據、期間及預算上限",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次最想改善什麼、希望多久看到改變？想先做哪些宣傳方式，哪些暫時不做？",
+          "example": "提出提升有效詢問的四週測試計畫",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "你想先試哪個做法？由誰執行、多久看一次結果，再決定要不要繼續？",
+          "example": "先看基準與資料缺口，再排優先級並設計實驗；交付：策略選項、渠道分工、週計畫與衡量指標",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "有哪些預算、時間或品牌上的限制？哪些效果不能保證，遇到什麼情況就先停下來？",
+          "example": "區分曝光與有效詢問；不承諾營收或排名成長",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會用詢問人數、預約數還是銷售額判斷效果？跟哪段時間比較，怎樣決定繼續或調整？",
+          "example": "每個建議有假設、成本、負責人與停止條件；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "你的公司主要服務誰？現在最想改善的是讓更多人看到、有人詢問，還是有人購買？",
+          "example": "企業階段、受眾、營運瓶頸與現有渠道",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "目前在哪些地方宣傳、花多少錢？有觀看、詢問或購買的數字嗎？沒有也可以直接說。",
+          "example": "目前流量、詢問與預約數據、期間及預算上限；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "行銷顧問目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "提出提升有效詢問的四週測試計畫；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於行銷顧問，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已確認每週可產兩篇內容；廣告預算待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "有哪些預算、時間或品牌上的限制？哪些效果不能保證，遇到什麼情況就先停下來？",
+          "example": "區分曝光與有效詢問；不承諾營收或排名成長",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "行銷顧問有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：目前流量、詢問與預約數據、期間及預算上限；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "你的公司主要服務誰？現在最想改善的是讓更多人看到、有人詢問，還是有人購買？",
+          "example": "行銷策略顧問與實驗規劃者；企業階段、受眾、營運瓶頸與現有渠道",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套行銷顧問的做法？哪些情況不要用？",
+          "example": "使用者提供營運現況並要求渠道與行銷策略時，協助產出策略選項、渠道分工、週計畫與衡量指標",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "目前在哪些地方宣傳、花多少錢？有觀看、詢問或購買的數字嗎？沒有也可以直接說。開始前還需要你提供什麼？",
+          "example": "目前流量、詢問與預約數據、期間及預算上限；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "你想先試哪個做法？由誰執行、多久看一次結果，再決定要不要繼續？",
+          "example": "先看基準與資料缺口，再排優先級並設計實驗",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會用詢問人數、預約數還是銷售額判斷效果？跟哪段時間比較，怎樣決定繼續或調整？",
+          "example": "策略選項、渠道分工、週計畫與衡量指標；檢查：每個建議有假設、成本、負責人與停止條件",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "有哪些預算、時間或品牌上的限制？哪些效果不能保證，遇到什麼情況就先停下來？",
+          "example": "區分曝光與有效詢問；不承諾營收或排名成長；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個行銷顧問的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：詢問量基準與可用資源。輸出：低成本測試方案與驗收指標",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "開發程式": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "開發程式主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "軟體工程師；軟體開發的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "做開發程式時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "軟體開發可提供的文件、素材與來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次開發程式要完成什麼？哪些事情先不做？",
+          "example": "完成一份軟體開發的需求清單；未確認工作先排除",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "開發程式想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對；交付：需求清單、結果摘要及待確認事項",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "做開發程式時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會怎麼檢查開發程式的結果？做到什麼程度才算完成？",
+          "example": "內容可追溯，符合已確認的範圍與格式；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "開發程式主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "軟體開發的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "做開發程式時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "軟體開發可提供的文件、素材與來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "開發程式目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "完成一份軟體開發的需求清單；未確認工作先排除；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於開發程式，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先整理軟體開發需求；交付時間待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "做開發程式時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "開發程式有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：軟體開發可提供的文件、素材與來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "開發程式主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "軟體工程師；軟體開發的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套開發程式的做法？哪些情況不要用？",
+          "example": "使用者要求整理軟體開發或執行此流程時，協助產出需求清單、結果摘要及待確認事項",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "做開發程式時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。開始前還需要你提供什麼？",
+          "example": "軟體開發可提供的文件、素材與來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "開發程式想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會怎麼檢查開發程式的結果？做到什麼程度才算完成？",
+          "example": "需求清單、結果摘要及待確認事項；檢查：內容可追溯，符合已確認的範圍與格式",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "做開發程式時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個開發程式的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：軟體開發需求說明。輸出：整理後的待辦與驗收條件",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "撰寫企劃": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "撰寫企劃主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "企劃撰寫者；企劃工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "做撰寫企劃時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "企劃工作可提供的文件、素材與來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次撰寫企劃要完成什麼？哪些事情先不做？",
+          "example": "完成一份企劃工作的需求清單；未確認工作先排除",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "撰寫企劃想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對；交付：需求清單、結果摘要及待確認事項",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "做撰寫企劃時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會怎麼檢查撰寫企劃的結果？做到什麼程度才算完成？",
+          "example": "內容可追溯，符合已確認的範圍與格式；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "撰寫企劃主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "企劃工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "做撰寫企劃時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "企劃工作可提供的文件、素材與來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "撰寫企劃目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "完成一份企劃工作的需求清單；未確認工作先排除；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於撰寫企劃，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先整理企劃工作需求；交付時間待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "做撰寫企劃時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "撰寫企劃有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：企劃工作可提供的文件、素材與來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "撰寫企劃主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "企劃撰寫者；企劃工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套撰寫企劃的做法？哪些情況不要用？",
+          "example": "使用者要求整理企劃工作或執行此流程時，協助產出需求清單、結果摘要及待確認事項",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "做撰寫企劃時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。開始前還需要你提供什麼？",
+          "example": "企劃工作可提供的文件、素材與來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "撰寫企劃想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會怎麼檢查撰寫企劃的結果？做到什麼程度才算完成？",
+          "example": "需求清單、結果摘要及待確認事項；檢查：內容可追溯，符合已確認的範圍與格式",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "做撰寫企劃時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個撰寫企劃的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：企劃工作需求說明。輸出：整理後的待辦與驗收條件",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "推廣行銷": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "推廣行銷主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "行銷規劃者；行銷工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "做推廣行銷時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "行銷工作可提供的文件、素材與來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次推廣行銷要完成什麼？哪些事情先不做？",
+          "example": "完成一份行銷工作的需求清單；未確認工作先排除",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "推廣行銷想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對；交付：需求清單、結果摘要及待確認事項",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "做推廣行銷時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會怎麼檢查推廣行銷的結果？做到什麼程度才算完成？",
+          "example": "內容可追溯，符合已確認的範圍與格式；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "推廣行銷主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "行銷工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "做推廣行銷時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "行銷工作可提供的文件、素材與來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "推廣行銷目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "完成一份行銷工作的需求清單；未確認工作先排除；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於推廣行銷，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先整理行銷工作需求；交付時間待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "做推廣行銷時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "推廣行銷有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：行銷工作可提供的文件、素材與來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "推廣行銷主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "行銷規劃者；行銷工作的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套推廣行銷的做法？哪些情況不要用？",
+          "example": "使用者要求整理行銷工作或執行此流程時，協助產出需求清單、結果摘要及待確認事項",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "做推廣行銷時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。開始前還需要你提供什麼？",
+          "example": "行銷工作可提供的文件、素材與來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "推廣行銷想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會怎麼檢查推廣行銷的結果？做到什麼程度才算完成？",
+          "example": "需求清單、結果摘要及待確認事項；檢查：內容可追溯，符合已確認的範圍與格式",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "做推廣行銷時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個推廣行銷的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：行銷工作需求說明。輸出：整理後的待辦與驗收條件",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "其他": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "其他主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "熟悉此領域的協作者；自訂任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "做其他時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "自訂任務可提供的文件、素材與來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次其他要完成什麼？哪些事情先不做？",
+          "example": "完成一份自訂任務的需求清單；未確認工作先排除",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "其他想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對；交付：需求清單、結果摘要及待確認事項",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "做其他時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會怎麼檢查其他的結果？做到什麼程度才算完成？",
+          "example": "內容可追溯，符合已確認的範圍與格式；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "其他主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "自訂任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "做其他時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "自訂任務可提供的文件、素材與來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "其他目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "完成一份自訂任務的需求清單；未確認工作先排除；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於其他，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先整理自訂任務需求；交付時間待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "做其他時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "其他有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：自訂任務可提供的文件、素材與來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "其他主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "熟悉此領域的協作者；自訂任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套其他的做法？哪些情況不要用？",
+          "example": "使用者要求整理自訂任務或執行此流程時，協助產出需求清單、結果摘要及待確認事項",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "做其他時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。開始前還需要你提供什麼？",
+          "example": "自訂任務可提供的文件、素材與來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "其他想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會怎麼檢查其他的結果？做到什麼程度才算完成？",
+          "example": "需求清單、結果摘要及待確認事項；檢查：內容可追溯，符合已確認的範圍與格式",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "做其他時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個其他的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：自訂任務需求說明。輸出：整理後的待辦與驗收條件",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    },
+    "": {
+      "core": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "協作角色與服務對象",
+          "question": "這項工作主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "協作者；未分類任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "environment",
+          "group": "角色／場景",
+          "section": "專案定位",
+          "label": "工作環境與資料位置",
+          "question": "做這項工作時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "未分類任務可提供的文件、素材與來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "目標與工作範圍",
+          "question": "這次這項工作要完成什麼？哪些事情先不做？",
+          "example": "完成一份未分類任務的需求清單；未確認工作先排除",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "workflow",
+          "group": "任務／動作",
+          "section": "工作約定",
+          "label": "協作步驟與交付",
+          "question": "這項工作想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對；交付：需求清單、結果摘要及待確認事項",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "固定限制與額外關注",
+          "question": "做這項工作時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "verification",
+          "group": "想法",
+          "section": "限制與驗收",
+          "label": "驗收與需確認的變更",
+          "question": "你會怎麼檢查這項工作的結果？做到什麼程度才算完成？",
+          "example": "內容可追溯，符合已確認的範圍與格式；擴大範圍前先確認",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "memory": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "對象與使用情境",
+          "question": "這項工作主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "未分類任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "background",
+          "group": "角色／場景",
+          "section": "背景與事實",
+          "label": "已確認資料與背景",
+          "question": "做這項工作時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。",
+          "example": "未分類任務可提供的文件、素材與來源；確認日期由使用者補充",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "目前目標與進度",
+          "question": "這項工作目前已完成哪些事、接下來要做什麼？請把已完成和還沒做的分開寫。",
+          "example": "完成一份未分類任務的需求清單；未確認工作先排除；狀態：待規劃",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "decisions",
+          "group": "任務／動作",
+          "section": "決策與進度",
+          "label": "既有決策與原因",
+          "question": "關於這項工作，有哪些事情已經決定？當時為什麼這樣選，還有什麼沒有決定？",
+          "example": "已決定先整理未分類任務需求；交付時間待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "工作偏好與注意事項",
+          "question": "做這項工作時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "sources",
+          "group": "想法",
+          "section": "偏好與待確認",
+          "label": "資料來源與未知事項",
+          "question": "這項工作有哪些資料要讓 AI 記住？可以附上來源或日期；還不確定的事情也請列出來。",
+          "example": "參考：未分類任務可提供的文件、素材與來源；缺少部分標記 [待確認]",
+          "required": false,
+          "maxLength": 20000
+        }
+      ],
+      "skill": [
+        {
+          "id": "role",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "技能角色與服務對象",
+          "question": "這項工作主要要幫誰、解決什麼問題？你希望 AI 怎麼協助？",
+          "example": "協作者；未分類任務的使用者、場合與目前背景",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "trigger",
+          "group": "角色／場景",
+          "section": "適用範圍",
+          "label": "用途與觸發時機",
+          "question": "下次你提出什麼要求時，希望 AI 使用這套這項工作的做法？哪些情況不要用？",
+          "example": "使用者要求整理未分類任務或執行此流程時，協助產出需求清單、結果摘要及待確認事項",
+          "required": true,
+          "maxLength": 1024
+        },
+        {
+          "id": "inputs",
+          "group": "角色／場景",
+          "section": "輸入與資源",
+          "label": "必要資料與可用資源",
+          "question": "做這項工作時，有哪些現成資料或指定工具可以用？不知道工具名稱也可以直接描述。開始前還需要你提供什麼？",
+          "example": "未分類任務可提供的文件、素材與來源；資料不足時先詢問來源",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "task",
+          "group": "任務／動作",
+          "section": "執行流程",
+          "label": "可重複的操作步驟",
+          "question": "這項工作想先做什麼、再做什麼？哪些步驟需要先給你確認？",
+          "example": "先釐清需求，再整理交付物並核對",
+          "required": true,
+          "maxLength": 20000
+        },
+        {
+          "id": "output",
+          "group": "任務／動作",
+          "section": "輸出與驗收",
+          "label": "成果格式與檢查方式",
+          "question": "你會怎麼檢查這項工作的結果？做到什麼程度才算完成？",
+          "example": "需求清單、結果摘要及待確認事項；檢查：內容可追溯，符合已確認的範圍與格式",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "ideas",
+          "group": "想法",
+          "section": "邊界與例外",
+          "label": "限制與失敗處理",
+          "question": "做這項工作時，有哪些一定要遵守、不能做，或需要特別注意的事？",
+          "example": "不自行增加需求；缺少的事實標記待確認；無法完成時回報缺口，不冒充成功",
+          "required": false,
+          "maxLength": 20000
+        },
+        {
+          "id": "examples",
+          "group": "想法",
+          "section": "輸入輸出範例",
+          "label": "一組輸入與理想輸出",
+          "question": "請舉一個這項工作的情境：你會怎麼請 AI 幫忙？希望它最後給你什麼內容？",
+          "example": "輸入：未分類任務需求說明。輸出：整理後的待辦與驗收條件",
+          "required": false,
+          "maxLength": 20000
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "title": "OpenAI：AGENTS.md",
+      "url": "https://developers.openai.com/codex/guides/agents-md",
+      "use": "長期指令與作用範圍"
+    },
+    {
+      "title": "Claude Code：記憶",
+      "url": "https://code.claude.com/docs/en/memory",
+      "use": "指令、背景與自動記憶的差異"
+    },
+    {
+      "title": "Agent Skills 規格",
+      "url": "https://agentskills.io/specification",
+      "use": "必要中繼資料、流程、範例與例外"
+    },
+    {
+      "title": "OpenAI：提示詞指南",
+      "url": "https://developers.openai.com/api/docs/guides/prompt-engineering",
+      "use": "明確指令、上下文與結構"
+    },
+    {
+      "title": "Google：提示詞設計",
+      "url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "use": "具體任務、格式與範例"
+    },
+    {
+      "title": "Anthropic：提示詞設計",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+      "use": "成功條件與驗證"
+    },
+    {
+      "title": "Kevin Voyage：提示詞原則",
+      "url": "https://kevin.voyage/post/prompt-engineering-principles/",
+      "use": "使用者指定的入門閱讀；問題設計另以官方文件交叉確認"
+    }
+  ]
+}

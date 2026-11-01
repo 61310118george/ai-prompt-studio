@@ -109,7 +109,7 @@ def test_marketing_evidence_diff_and_stale_apply(social):
     social.request = transport
     social.sync('threads')
     api = DesktopApi(MemoryRepository(social.db_path))
-    api.unlock_developer_mode('61310118')
+    api.unlock_developer_mode('5830485')
     api._social = social
     class Credential:
         def load(self): return 'fake-key'

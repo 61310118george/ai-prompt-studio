@@ -179,7 +179,7 @@ class DesktopApiTests(unittest.TestCase):
         self.assertNotIn("linked.md", {item["relative_path"] for item in scan["data"]["files"]})
 
     def test_health_check_finds_wrong_name_and_possible_secret(self) -> None:
-        self.api.unlock_developer_mode('61310118')
+        self.api.unlock_developer_mode('5830485')
         (self.project / "AGENT.md").write_text("password: hunter2\n", encoding="utf-8")
         result = self.api.run_memory_health_check(str(self.project), "codex")
         self.assertTrue(result["ok"], result["error"])

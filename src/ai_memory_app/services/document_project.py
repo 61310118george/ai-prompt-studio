@@ -44,6 +44,13 @@ def validate_document_state(value):
         raise ValueError('分類格式不正確。')
     if any(not isinstance(tag, str) for tag in value.get('minors', [])):
         raise ValueError('分類格式不正確。')
+    topic_drafts = value.get('topicDrafts', {})
+    if not isinstance(topic_drafts, dict) or len(topic_drafts) > 20:
+        raise ValueError('分類草稿格式不正確。')
+    for topic, documents in topic_drafts.items():
+        if not isinstance(topic, str) or len(topic) > 200:
+            raise ValueError('分類草稿名稱不正確。')
+        validate_document_state({'mode': value.get('mode', ''), 'documents': documents})
     return value
 
 

@@ -134,6 +134,40 @@ def test_compose_uses_answers_and_limits_to_field(advisor):
         advisor.compose_document(request)
 
 
+@pytest.mark.parametrize('kind', ['core', 'memory', 'skill'])
+@pytest.mark.parametrize('field', ['role', 'task', 'ideas'])
+def test_requirement_dimensions_revise_only_requested_field(advisor, kind, field):
+    def fake(req, **kwargs):
+        data = json.loads(json.loads(req.data)['contents'][0]['parts'][0]['text'])
+        assert data['tags'] == '開發程式,開發程式/寫網頁'
+        assert data['content'] == '希望能夠更好被搜尋找到'
+        assert set(data['field_schema']) == {field}
+        assert 'private_other_field' not in data
+        return json_reply({'fields': {field: '希望改善網站的搜尋可見度。'}})
+    advisor._open = fake
+    result = advisor.compose_document(document_request(
+        document_type=kind, field_id=field, tags='開發程式,開發程式/寫網頁',
+        content='希望能夠更好被搜尋找到', private_other_field='DO NOT SEND',
+        clarification={'understanding': ['搜尋可見度'], 'questions': ['是否指搜尋可見度？']}, answers=['是']))
+    assert set(result['fields']) == {field}
+
+
+@pytest.mark.parametrize('kind', ['core', 'memory', 'skill'])
+def test_requirement_writing_returns_three_dimensions(advisor, kind):
+    fields = {'role': '網站設計師', 'task': '設計網站', 'ideas': '注意搜尋可見度'}
+    def fake(req, **kwargs):
+        data = json.loads(json.loads(req.data)['contents'][0]['parts'][0]['text'])
+        assert set(data['field_schema']) == set(fields)
+        assert data['answers'] == list(fields.values())
+        return json_reply({'fields': fields})
+    advisor._open = fake
+    result = advisor.compose_document(document_request(
+        mode='write', document_type=kind,
+        clarification={'understanding': ['網站需求'], 'questions': ['角色？', '任務？', '想法？']},
+        answers=list(fields.values())))
+    assert result['fields'] == fields
+
+
 @pytest.mark.parametrize('answers', [[], [''], ['password: secret-value'], ['a'*2001]])
 def test_compose_rejects_bad_answers_before_network(advisor, answers):
     advisor._open = lambda *a, **kw: pytest.fail('Must not send')
@@ -284,3 +318,24 @@ def test_saved_store_is_reused_and_probe_must_succeed():
     assert restored.status()['connection']=='unverified'
     restored._open=service._open
     assert restored.configure({'api_key':'','model':'gemini-3.5-flash-lite'})['connection']=='connected'
+
+
+@pytest.mark.parametrize('kind', ['core', 'memory', 'skill'])
+def test_topic_specific_ai_schema_and_question_context(advisor, kind):
+    from ai_memory_app.services.document_profiles import profile_fields
+    spec = profile_fields(kind, '推廣行銷', '分析市場')
+    request = document_request(mode='write', document_type=kind, schema_version=2,
+                               major='推廣行銷', minor='分析市場')
+    def clarify(req, **kwargs):
+        data = json.loads(json.loads(req.data)['contents'][0]['parts'][0]['text'])
+        assert data['field_spec'] == spec
+        assert '同業資料' in str(data['field_spec'])
+        return json_reply({'understanding':['研究市場'], 'questions':['研究哪個地區？']})
+    advisor._open = clarify
+    review = advisor.clarify_document(request)
+    def compose(req, **kwargs):
+        data = json.loads(json.loads(req.data)['contents'][0]['parts'][0]['text'])
+        assert set(data['field_schema']) == {f['id'] for f in spec}
+        return json_reply({'fields':{f['id']:'使用者已確認資料' for f in spec}})
+    advisor._open = compose
+    assert len(advisor.compose_document({**request,'clarification':review,'answers':['台北']})['fields']) == len(spec)

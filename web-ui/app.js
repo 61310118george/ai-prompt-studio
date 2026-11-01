@@ -384,7 +384,7 @@ async function init() {
   renderSettings();
   bindEvents();
   const historyPanel=$('.history-section');historyPanel.classList.add('panel');$('#page-projects').append(historyPanel);
-  promptWorkspace = mountPromptWorkspace({bridge, state, escapeHtml, reportError: showError, toast: showToast});
+  promptWorkspace = await mountPromptWorkspace({bridge, state, escapeHtml, reportError: showError, toast: showToast});
   mountCloudSettings(bridge);
   mountSocialSettings({bridge,esc:escapeHtml});
   fileEditor=mountFileEditor({bridge,state,esc:escapeHtml,toast:showToast,toWorkbench:async draft=>{if(!await promptWorkspace.importDraft(draft))return false;setPage('prompts');return true;},refreshed:async path=>{state.scan=assertResponse(await bridge.call('scan_project',state.project.path));renderProjectScan();await previewFile(path);await loadHistory();await runHealth();await promptWorkspace.reload();}});

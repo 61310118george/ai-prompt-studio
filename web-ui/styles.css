@@ -515,6 +515,10 @@ dd { margin: 0; font-size: .8rem; font-weight: 650; }
 #documentFormArea > .prompt-tag-field { margin-top:18px; }
 #documentAiMessage:empty { display:none; }
 #documentAiApply { min-height:32px; padding:5px 12px; line-height:1.4; margin-top:12px; }
+.document-question-group { min-width:0; border-top:1px solid var(--border, #ddd3c7); padding-top:12px; }
+.document-question-group > h4 { margin:0 0 12px; color:var(--accent, #80513d); }
+.document-question-group .document-field { margin-bottom:18px; }
+.document-question { margin:4px 0 8px; font-size:13px; line-height:1.6; }
 .document-ai-dialog li { overflow-wrap:anywhere; }
 .document-fields, #documentEditor { display:grid; gap:18px; min-width:0; }
 .document-field textarea { width:100%; box-sizing:border-box; resize:vertical; }
@@ -525,3 +529,5 @@ dd { margin: 0; font-size: .8rem; font-weight: 650; }
 #documentStepActions { margin-top:16px; }
 #documentBuilderError { color:#a12d2d; }
 #documentEditor[hidden], #documentFormArea[hidden], .document-steps[hidden], #documentStepActions[hidden], .section-ai-dialog [hidden] { display:none !important; }
+
+.document-purpose { margin: 0 0 20px; padding: 12px 16px; border-radius: 10px; background: #f5f1e9; color: #635b52; line-height: 1.7; overflow-wrap: anywhere; }

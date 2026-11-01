@@ -5,9 +5,13 @@ import { isDeveloper } from './developer-mode.js';
 import { mountSectionOptimization } from './section-optimization.js';
 import { mountCsvImport } from './csv-import.js';
 import { mountSocialWorkspace } from './social-workspace.js';
+import { configureDocumentProfiles } from './document-catalog.js';
 import { mountDocumentBuilder } from './document-builder.js';
 import { mountMarkdownEditor, parseMarkdownSections, updateMarkdownSection } from './prompt-builder.js';
-export function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportError, toast }) {
+export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, reportError, toast }) {
+  const profiles = await bridge.call('get_document_profiles');
+  if(!profiles?.ok)throw Error(profiles?.error||'文件題庫載入失敗');
+  configureDocumentProfiles(profiles.data);
   const root = document.querySelector('#page-prompts');
   root.innerHTML = `
     <div class="page-intro"><div><h2>提示詞工作台</h2><p>套用範本或自行撰寫；儲存後會直接進入範本庫，可依群組拖曳整理。</p></div><span class="agent-chip">預設離線 · AI 分析需確認</span></div>
