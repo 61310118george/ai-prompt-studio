@@ -52,12 +52,12 @@ def main():
 
         class FixtureApi(DesktopApi):
             def export_document_project(self, title, documents):
-                original = self.window
-                self.window = SimpleNamespace(create_file_dialog=lambda *args, **kwargs: (str(temp),))
+                original = self._window
+                self._window = SimpleNamespace(create_file_dialog=lambda *args, **kwargs: (str(temp),))
                 try:
                     return super().export_document_project(title, documents)
                 finally:
-                    self.window = original
+                    self._window = original
 
             def preview_csv_import(self, kind, project_path):
                 data = self._csv_import.preview(self._csv_import.example(kind).encode(), kind, self._prompt_scope(project_path))

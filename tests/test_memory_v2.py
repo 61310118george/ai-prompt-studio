@@ -110,6 +110,14 @@ class DesktopApiTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    def test_native_window_is_not_publicly_exposed_to_js_bridge(self) -> None:
+        # pywebview recursively walks public API attributes. Windows native
+        # accessibility properties can recurse forever if the window is public.
+        native_window = object()
+        self.api.attach_window(native_window)
+        self.assertIs(self.api._window, native_window)
+        self.assertNotIn("window", [name for name in dir(self.api) if not name.startswith("_")])
+
     def _request(self, **overrides) -> dict:
         request = {
             "project_path": str(self.project),

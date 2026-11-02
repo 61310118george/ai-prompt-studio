@@ -48,7 +48,7 @@ def safe_export_filename(title: str) -> str:
 class DesktopApi:
     def __init__(self, repository: MemoryRepository, window=None, backup_root: Path | None = None) -> None:
         self.repository = repository
-        self.window = window
+        self._window = window
         self.allowed_root: Path | None = None
         self.backup_root = backup_root or get_backup_dir()
         self.prompts = PromptLibrary(repository.db_path)
@@ -86,10 +86,10 @@ class DesktopApi:
     def preview_csv_import(self, kind, project_path):
         def choose():
             scope = self._prompt_scope(project_path)
-            if self.window is None:
+            if self._window is None:
                 raise ValueError("桌面視窗尚未就緒。")
             import webview
-            selected = self.window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=("CSV (*.csv)",))
+            selected = self._window.create_file_dialog(webview.OPEN_DIALOG, allow_multiple=False, file_types=("CSV (*.csv)",))
             if not selected:
                 return None
             target = Path(selected[0] if isinstance(selected, (tuple, list)) else selected)
@@ -106,10 +106,10 @@ class DesktopApi:
     def export_csv_example(self, kind):
         def save():
             content = self._csv_import.example(kind)
-            if self.window is None:
+            if self._window is None:
                 raise ValueError("桌面視窗尚未就緒。")
             import webview
-            selected = self.window.create_file_dialog(webview.SAVE_DIALOG, save_filename=f'{kind}-example.csv', file_types=("CSV (*.csv)",))
+            selected = self._window.create_file_dialog(webview.SAVE_DIALOG, save_filename=f'{kind}-example.csv', file_types=("CSV (*.csv)",))
             if not selected:
                 return None
             target = Path(selected[0] if isinstance(selected, (list, tuple)) else selected).with_suffix('.csv')
@@ -208,7 +208,7 @@ class DesktopApi:
         return self._safe_call(lambda: self._cloud_advisor.compose_document(request))
 
     def attach_window(self, window) -> None:
-        self.window = window
+        self._window = window
 
     def _response(self, data=None, *, error: str | None = None) -> dict:
         return {"ok": error is None, "data": data, "error": error}
@@ -278,10 +278,10 @@ class DesktopApi:
 
     def choose_project_root(self) -> dict:
         def choose():
-            if self.window is None:
+            if self._window is None:
                 raise ValueError("桌面視窗尚未就緒，請重新啟動 App。")
             import webview
-            selected = self.window.create_file_dialog(webview.FOLDER_DIALOG)
+            selected = self._window.create_file_dialog(webview.FOLDER_DIALOG)
             if not selected:
                 return None
             raw = selected[0] if isinstance(selected, (list, tuple)) else selected
@@ -290,10 +290,10 @@ class DesktopApi:
 
     def import_prompt_file(self) -> dict:
         def choose():
-            if self.window is None:
+            if self._window is None:
                 raise ValueError("本機檔案匯入僅提供桌面 App 使用。")
             import webview
-            selected = self.window.create_file_dialog(
+            selected = self._window.create_file_dialog(
                 webview.OPEN_DIALOG,
                 allow_multiple=False,
                 file_types=("Markdown (*.md)",),
@@ -312,14 +312,14 @@ class DesktopApi:
 
     def export_prompt_file(self, title: str, content: str) -> dict:
         def choose():
-            if self.window is None:
+            if self._window is None:
                 raise ValueError("本機檔案匯出僅提供桌面 App 使用。")
             compiled = validate_text(content)
             if not compiled.strip():
                 raise ValueError("不允許匯出空白提示詞。")
             filename = f"{safe_export_filename(title)}.md"
             import webview
-            selected = self.window.create_file_dialog(
+            selected = self._window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 allow_multiple=False,
                 save_filename=filename,
@@ -357,10 +357,10 @@ class DesktopApi:
     def export_document_project(self, title, documents):
         def choose():
             files = project_files(documents)
-            if self.window is None:
+            if self._window is None:
                 raise ValueError('請在桌面 App 選擇輸出資料夾。')
             import webview
-            selected = self.window.create_file_dialog(webview.FOLDER_DIALOG)
+            selected = self._window.create_file_dialog(webview.FOLDER_DIALOG)
             if not selected:
                 return None
             raw = selected[0] if isinstance(selected, (tuple, list)) else selected
