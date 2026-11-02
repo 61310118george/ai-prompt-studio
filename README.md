@@ -7,6 +7,23 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 
 > `web-ui/` 是桌面 App 內嵌介面，沒有瀏覽器預覽模式。CSV 與本機功能可直接使用；社群登入另需部署 `oauth-service/` 授權服務，官方登入頁會在系統瀏覽器開啟。
 
+## 直接下載使用（不需要 Git 或 Python）
+
+1. 按本頁綠色 **Code → Local → Download ZIP**，或[直接下載完整 ZIP](https://github.com/61310118george/ai-prompt-studio/archive/refs/heads/main.zip)。
+2. 完整解壓縮，先閱讀根目錄的 **先看這裡.txt**。
+3. 打開 **download/**，再解壓縮符合自己系統的程式包：
+
+| 系統 | 下載包 | 開啟方式 |
+|---|---|---|
+| Windows 11 x64 | `AI-Prompt-Studio-V1.0-Windows-x64.zip` | 解壓後開啟資料夾內的 `AI Prompt Studio Next.exe`；整個資料夾都要保留 |
+| macOS 14+ Apple Silicon | `AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip` | 解壓後把 `.app` 拖到「應用程式」再開啟；不適用 Intel Mac |
+
+下載包已包含 Python 與 App 所需套件；Windows 仍需系統提供 Edge WebView2 Runtime。首次開啟可能受系統安全檢查阻擋，本版未經商業簽章／Apple 公證，請先確認來源，勿停用防護。核心本機功能不需 API Key。
+
+更新時先儲存並完全關閉 App，再使用新解壓的完整程式包。草稿與設定保留在使用者資料目錄。原始碼仍完整保留，開發者可繼續使用下方的 Git 安裝方式。
+
+`download/manifest.json` 記錄兩個程式包的來源 commit、SHA-256 與驗證方式。每次更新程式後，須重新建置兩個系統並一起替換下載包，不能只更新原始碼。
+
 ## 功能與使用模式
 
 | 主題 | 主要解決的問題 |
@@ -28,7 +45,7 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 
 ### Windows 11
 
-- Windows 11 x64 與 64 位元 Python 3.12。
+- Windows 11 x64；只有從原始碼執行才需要 64 位元 Python 3.12。
 - 需要 Microsoft Edge WebView2 Runtime；Windows 11 通常已內建。
 - 測試版未使用程式碼簽章，第一次執行可能出現 SmartScreen 提示。
 
@@ -199,6 +216,8 @@ SQLite 保存匯入模板、貼文文字、數據快照及社群 AI 優化紀錄
 
 ```text
 ai-prompt-studio/
+├── download/                   # 一般使用者直接解壓使用的雙平台程式包與來源紀錄
+├── 先看這裡.txt                  # 不使用指令的下載與開啟說明
 ├── .github/workflows/          # GitHub Actions 與 Windows 自動建置
 ├── oauth-service/              # 社群登入授權後端、獨立依賴與 Docker 建置
 ├── resources/                  # Agent 規格與離線 tokenizer 資料
@@ -374,6 +393,8 @@ docker run --detach --restart unless-stopped --name prompt-studio-oauth \
 確認三個平台都能登入、列出自己的帳號並完成同步；用平台後台核對數筆貼文數字、指標名稱與時間。測試取消登入、撤銷權限與重新連接。自動化測試採替身回應，只能驗證流程，不能替代這項平台驗收。
 
 ## 測試
+
+2026-11-02 下載版：macOS 186 項測試與打包自檢通過；Windows 已通過 [GitHub Windows Runner 測試、打包及套件自檢](https://github.com/61310118george/ai-prompt-studio/actions/runs/41446666250)。Runner 為 Windows Server 2022，不等同 Windows 11 桌面實機驗收。已修正 SQLite 連線未及時關閉造成的檔案鎖定，並調整 Windows 測試的 UTF-8、換行及權限判斷。
 
 更新或打包前請先儲存草稿並完全結束 App。macOS 與 Windows 打包腳本會檢查是否仍在執行，避免覆蓋舊程序正在使用的模組。若看到 `Error -3 while decompressing data: incorrect header check`，請完全結束後重開；若仍出現，重新解壓完整安裝包。打包自我測試會離線執行三種文件的 AI 輔助撰寫與修正問答，確認壓縮模組可載入，不讀取使用者金鑰或連線 Gemini。
 

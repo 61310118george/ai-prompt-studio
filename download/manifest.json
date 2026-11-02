@@ -1,0 +1,22 @@
+{
+  "version": "V1.0",
+  "built_on": "2026-11-02",
+  "source_commit": "d3095e6a1feeb0f32e638815a8be46e3287019da",
+  "verification": {
+    "macOS": "Apple Silicon build and packaged self-test passed",
+    "Windows": "Windows Server 2022 GitHub Runner tests, build and packaged self-test passed; Windows 11 interactive UI not yet tested",
+    "windows_run": "https://github.com/61310118george/ai-prompt-studio/actions/runs/41446666250"
+  },
+  "packages": [
+    {
+      "file": "AI-Prompt-Studio-V1.0-Windows-x64.zip",
+      "sha256": "20644cee2c57851a3b1b583307f65712ef84b8ef2dc42e56b7da1d79fdb861be",
+      "bytes": 19313412
+    },
+    {
+      "file": "AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip",
+      "sha256": "67a1ba7ed5f27a2546fcc6bc216b2b76ee95eade8ba5d81d782cbb75a4589a71",
+      "bytes": 24674393
+    }
+  ]
+}

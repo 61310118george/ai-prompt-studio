@@ -1,0 +1,33 @@
+AI Prompt Studio Next V1.0｜下載後使用
+
+不需要 Git、不需要 Python，也不用輸入指令。
+
+1. 在 GitHub 按綠色 Code → Local → Download ZIP。
+2. 先將下載的 ZIP 完整解壓縮。
+3. 打開 download 資料夾，選自己的系統：
+
+Windows 11（x64）
+  解壓縮 AI-Prompt-Studio-V1.0-Windows-x64.zip。
+  打開裡面的 AI Prompt Studio Next 資料夾。
+  雙擊 AI Prompt Studio Next.exe。
+  請保留整個資料夾，不能只搬走 exe，也不要在壓縮檔內直接執行。
+
+macOS（Apple Silicon：M1／M2／M3 等）
+  解壓縮 AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip。
+  把 AI Prompt Studio Next.app 拖到「應用程式」，再開啟。
+  這不是 Intel Mac 版本。
+
+第一次使用
+  可以直接建立提示詞、管理範本及匯入本機檔案。
+  只有使用 AI 功能才需要在「設定」填入自己的 Gemini API Key。
+  Windows 需要 Edge WebView2 Runtime；若系統提示缺少，請從 Microsoft 官方網站安裝。
+  此測試版未經商業簽章／Apple 公證；若系統阻擋，先確認下載來源，不要關閉系統防護。
+
+更新
+  先儲存草稿並完全關閉 App，再解壓新版。
+  Windows 請用完整的新資料夾，不要只覆蓋 exe。
+  本機草稿與設定另存於系統使用者資料夾，不在下載包中。
+
+給開發者
+  原始碼仍在 src、web-ui、resources 等資料夾。
+  Git clone、原始碼執行與自行打包方式，請看 README.md。
