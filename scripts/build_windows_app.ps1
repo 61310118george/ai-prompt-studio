@@ -27,6 +27,8 @@ if (-not (Test-Path $Python)) {
 & $Python -m pip install --upgrade pip
 & $Python -m pip install -r requirements.txt
 & $Python -m pip install pyinstaller
+& $Python scripts\probe_windows_dll_zone.py
+if ($LASTEXITCODE -ne 0) { throw "Native .NET loader baseline failed." }
 
 if (-not (Test-Path "resources\tokenizers\o200k_base.json") -or -not (Test-Path "resources\tokenizers\cl100k_base.json")) {
     & $Python scripts\prepare_tokenizers.py
