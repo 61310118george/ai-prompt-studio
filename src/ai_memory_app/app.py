@@ -66,6 +66,15 @@ def main() -> int:
     except ModuleNotFoundError as exc:
         raise SystemExit("pywebview is not installed. Run: pip install -r requirements.txt") from exc
 
+    desktop_check = "--desktop-self-test" in sys.argv
+    report_path = None
+    if desktop_check:
+        from pathlib import Path
+        import os
+        if not os.environ.get("AI_PROMPT_STUDIO_DATA_DIR"):
+            raise RuntimeError("Desktop self-test requires an isolated data directory")
+        report_path = Path(sys.argv[sys.argv.index("--desktop-self-test") + 1])
+
     db_path = get_default_db_path()
     initialize_database(db_path)
     repository = MemoryRepository(db_path)
@@ -84,5 +93,25 @@ def main() -> int:
         text_select=True,
     )
     api.attach_window(window)
+    if desktop_check:
+        def verify_window():
+            import time
+            result = {"passed": False}
+            try:
+                for _ in range(120):
+                    ready = window.evaluate_js("Boolean(document.getElementById('documentType-core'))")
+                    if ready:
+                        result = {"passed": True, "native_window": True, "document_tabs": True}
+                        break
+                    time.sleep(0.5)
+                else:
+                    result["error"] = "Document UI did not become ready"
+            except Exception as exc:
+                result["error"] = str(exc)
+            finally:
+                report_path.write_text(json.dumps(result), encoding="utf-8")
+                window.destroy()
+        webview.start(verify_window, debug=False, private_mode=True)
+        return 0 if json.loads(report_path.read_text(encoding="utf-8"))["passed"] else 1
     webview.start(debug=False, private_mode=True)
     return 0

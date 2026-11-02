@@ -44,6 +44,7 @@ Assert-AppClosed
     --noconfirm `
     --clean `
     --windowed `
+    --onefile `
     --name $AppName `
     --collect-all tiktoken `
     --collect-all keyring `
@@ -54,9 +55,9 @@ Assert-AppClosed
     run_app.py
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller build failed." }
 
-$Executable = Join-Path $RootDir "dist\$AppName\$AppName.exe"
-& $Executable --self-test
-if ($LASTEXITCODE -ne 0) { throw "Packaged app self-test failed; archive not created." }
+$Executable = Join-Path $RootDir "dist\$AppName.exe"
+$CheckProcess = Start-Process -FilePath $Executable -ArgumentList "--self-test" -Wait -PassThru
+if ($CheckProcess.ExitCode -ne 0) { throw "Packaged app self-test failed; archive not created." }
 
 $ReleaseDir = Join-Path $RootDir "release"
 $Archive = Join-Path $ReleaseDir "$AppName $ReleaseVersion Windows x64.zip"
@@ -64,7 +65,10 @@ New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 if (Test-Path $Archive) {
     Remove-Item $Archive -Force
 }
-Compress-Archive -Path (Join-Path $RootDir "dist\$AppName") -DestinationPath $Archive
+Compress-Archive -Path $Executable -DestinationPath $Archive
+
+# Test the delivered ZIP, including the internet-zone metadata Explorer propagates.
+& (Join-Path $PSScriptRoot "test_windows_download.ps1") -Archive $Archive
 
 Write-Host "Built: $Executable"
 Write-Host "Packaged: $Archive"
