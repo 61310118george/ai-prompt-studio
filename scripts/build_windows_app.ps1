@@ -58,7 +58,14 @@ Assert-AppClosed
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller build failed." }
 
 $Executable = Join-Path $RootDir "dist\$AppName.exe"
-$CheckProcess = Start-Process -FilePath $Executable -ArgumentList "--self-test" -Wait -PassThru
+$CheckReport = Join-Path $RootDir "dist\package-check.json"
+$CheckProcess = Start-Process -FilePath $Executable -ArgumentList @("--self-test", "--test-report", "`"$CheckReport`"") -PassThru
+if (-not $CheckProcess.WaitForExit(120000)) {
+    taskkill /PID $CheckProcess.Id /T /F | Out-Null
+    throw "Packaged self-test timed out."
+}
+$CheckProcess.Refresh()
+if (Test-Path $CheckReport) { Get-Content $CheckReport -Raw | Write-Host }
 if ($CheckProcess.ExitCode -ne 0) { throw "Packaged app self-test failed; archive not created." }
 
 $ReleaseDir = Join-Path $RootDir "release"

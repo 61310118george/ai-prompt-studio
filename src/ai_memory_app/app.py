@@ -59,6 +59,9 @@ def main() -> int:
             "document_ai_flows": check_document_ai(),
             "tokenizers": {name: count_tokens("hello world", name) for name in ("o200k_base", "cl100k_base")},
         }
+        if "--test-report" in sys.argv:
+            from pathlib import Path
+            Path(sys.argv[sys.argv.index("--test-report") + 1]).write_text(json.dumps(report), encoding="utf-8")
         print(json.dumps(report, ensure_ascii=False))
         return 0 if report["tls"] and report["web_ui"] and all(item["exact_text"] for item in report["tokenizers"].values()) else 1
     try:

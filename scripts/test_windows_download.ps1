@@ -14,12 +14,13 @@ try {
     Set-Content -Path $Exe -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3" -Encoding ASCII
     $Report = Join-Path $TestRoot "desktop-result.json"
     $env:AI_PROMPT_STUDIO_DATA_DIR = Join-Path $TestRoot "isolated-data"
-    $Process = Start-Process -FilePath $Exe -ArgumentList @("--desktop-self-test", "`"$Report`"") -PassThru
+    $Process = Start-Process -FilePath $Exe -ArgumentList @("--desktop-self-test", "`"$Report`"", "--test-report", "`"$Report`"") -PassThru
     if (-not $Process.WaitForExit(120000)) {
         # Kill only this test process tree, never a user's application.
         taskkill /PID $Process.Id /T /F | Out-Null
         throw "Downloaded application did not finish native-window validation within 120 seconds."
     }
+    if (Test-Path $Report) { Get-Content $Report -Raw | Write-Host }
     $Process.Refresh()
     if ($Process.ExitCode -ne 0 -or -not (Test-Path $Report)) {
         throw "Downloaded application failed to open its native window (exit $($Process.ExitCode))."
