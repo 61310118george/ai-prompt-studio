@@ -1,6 +1,7 @@
 import io
 import json
 import stat
+import os
 import urllib.error
 
 import pytest
@@ -27,7 +28,8 @@ def test_local_credential_store_is_private_and_removable(tmp_path):
     store = LocalCredentialStore(tmp_path / "app-support" / "credentials.json")
     store.save("AQ." + "a" * 35)
     assert store.load().startswith("AQ.")
-    assert stat.S_IMODE(store.path.stat().st_mode) == 0o600
+    if os.name != "nt":  # Windows uses ACLs rather than POSIX permission bits.
+        assert stat.S_IMODE(store.path.stat().st_mode) == 0o600
     store.clear()
     assert store.load() == ""
 

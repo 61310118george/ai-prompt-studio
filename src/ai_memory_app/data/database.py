@@ -309,10 +309,20 @@ SEED_MEMORY_ITEMS = [
 ]
 
 
+class ManagedConnection(sqlite3.Connection):
+    """Commit or roll back, then release the file handle on every context exit."""
+
+    def __exit__(self, *exc):
+        try:
+            return super().__exit__(*exc)
+        finally:
+            self.close()
+
+
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
     db_path = db_path or get_default_db_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(db_path, factory=ManagedConnection)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     return connection

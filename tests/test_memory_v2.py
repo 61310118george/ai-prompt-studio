@@ -127,6 +127,7 @@ class DesktopApiTests(unittest.TestCase):
             columns = {row[1] for row in connection.execute("PRAGMA table_info(projects)")}
             tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             count = connection.execute("SELECT COUNT(*) FROM memory_items").fetchone()[0]
+        connection.close()
         self.assertIn("root_path", columns)
         self.assertIn("last_scanned_at", columns)
         self.assertIn("memory_file_changes", tables)
@@ -149,7 +150,7 @@ class DesktopApiTests(unittest.TestCase):
         self.assertFalse(rejected["ok"])
         self.assertIn("其他程式修改", rejected["error"])
 
-        target.write_text(applied_content := preview["data"]["compiled"], encoding="utf-8")
+        target.write_text(applied_content := preview["data"]["compiled"], encoding="utf-8", newline="\n")
         change = self.repository.get_memory_file_change(applied["data"]["change_id"])
         self.assertEqual(change["output_hash"], __import__("hashlib").sha256(applied_content.encode()).hexdigest())
         restored = self.api.restore_change(applied["data"]["change_id"])
