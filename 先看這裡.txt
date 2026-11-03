@@ -8,9 +8,9 @@ AI Prompt Studio Next V1.0｜下載後使用
 
 Windows 11（x64）
   解壓縮 AI-Prompt-Studio-V1.0-Windows-x64.zip。
-  打開裡面的 AI Prompt Studio Next 資料夾。
-  雙擊 AI Prompt Studio Next.exe。
-  請保留整個資料夾，不能只搬走 exe，也不要在壓縮檔內直接執行。
+  雙擊解壓後的 AI Prompt Studio Next.exe。
+  新版已整合成單一 EXE，不需要 _internal 資料夾。
+  請先解壓再執行，第一次開啟可能需要稍等。
 
 macOS（Apple Silicon：M1／M2／M3 等）
   解壓縮 AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip。
@@ -25,9 +25,13 @@ macOS（Apple Silicon：M1／M2／M3 等）
 
 更新
   先儲存草稿並完全關閉 App，再解壓新版。
-  Windows 請用完整的新資料夾，不要只覆蓋 exe。
+  Windows 請解壓到新資料夾，開啟新版單一 EXE，不要再點舊版捷徑。
   本機草稿與設定另存於系統使用者資料夾，不在下載包中。
 
 給開發者
   原始碼仍在 src、web-ui、resources 等資料夾。
-  Git clone、原始碼執行與自行打包方式，請看 README.md。
+  Git clone 與原始碼執行方式，請看 README.md。
+
+若舊版顯示 Failed to resolve Python.Runtime.Loader.Initialize
+  請重新下載此版本，解壓到新資料夾後開啟單一 EXE。
+  不需要刪除草稿或 API 設定，也不要停用系統安全防護。

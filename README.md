@@ -15,7 +15,7 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 
 | 系統 | 下載包 | 開啟方式 |
 |---|---|---|
-| Windows 11 x64 | `AI-Prompt-Studio-V1.0-Windows-x64.zip` | 解壓後開啟資料夾內的 `AI Prompt Studio Next.exe`；整個資料夾都要保留 |
+| Windows 11 x64 | `AI-Prompt-Studio-V1.0-Windows-x64.zip` | 解壓後雙擊 `AI Prompt Studio Next.exe`；新版為單一 EXE，不需 `_internal` 資料夾 |
 | macOS 14+ Apple Silicon | `AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip` | 解壓後把 `.app` 拖到「應用程式」再開啟；不適用 Intel Mac |
 
 下載包已包含 Python 與 App 所需套件；Windows 仍需系統提供 Edge WebView2 Runtime。首次開啟可能受系統安全檢查阻擋，本版未經商業簽章／Apple 公證，請先確認來源，勿停用防護。核心本機功能不需 API Key。
@@ -41,7 +41,6 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 
 - Apple Silicon Mac，建議 macOS 14 或更新版本。
 - 從原始碼執行需要 Python 3.12。
-- 打包 `.app` 需要 Xcode Command Line Tools 的 `codesign`。
 
 ### Windows 11
 
@@ -49,9 +48,7 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 - 需要 Microsoft Edge WebView2 Runtime；Windows 11 通常已內建。
 - 測試版未使用程式碼簽章，第一次執行可能出現 SmartScreen 提示。
 
-PyInstaller 無法跨作業系統打包，因此 macOS 版必須在 macOS 建置，Windows 版必須在 Windows 建置。可參考 [PyInstaller 官方文件](https://pyinstaller.org/en/latest/) 與 [pywebview Windows 安裝說明](https://pywebview.flowrl.com/guide/installation)。
-
-## 從原始碼執行
+## 開發者：Git／原始碼執行（選用）
 
 ### macOS
 
@@ -73,50 +70,17 @@ PYTHONPATH=src python run_app.py
 git clone https://github.com/61310118george/ai-prompt-studio.git
 Set-Location ai-prompt-studio
 py -3.12 -m venv .venv
-Set-ExecutionPolicy -Scope Process Bypass
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-$env:PYTHONPATH = "src"
-python run_app.py
-```
-
-若無法啟用 PowerShell 腳本，可直接使用虛擬環境中的 Python：
-
-```powershell
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe run_app.py
 ```
 
-## 打包桌面版
+## Windows 舊下載版的啟動錯誤
 
-### macOS
+若顯示 `Failed to resolve Python.Runtime.Loader.Initialize`，請重新下載最新版，解壓到新的資料夾並開啟單一 EXE，不要再使用指向舊 `_internal` 版本的捷徑。草稿與設定不必刪除。
 
-```bash
-bash scripts/build_macos_app.sh
-```
-
-輸出：
-
-- `dist/AI Prompt Studio Next.app`
-- `release/AI Prompt Studio Next V1.0 macOS Apple Silicon.zip`
-
-### Windows 11
-
-在 PowerShell 執行：
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\build_windows_app.ps1
-```
-
-輸出：
-
-- `dist\AI Prompt Studio Next\AI Prompt Studio Next.exe`
-- `release\AI Prompt Studio Next V1.0 Windows x64.zip`
-
-Windows 腳本會建立 `.venv-windows`、安裝相依套件、執行 `--self-test`，再產生可完整解壓執行的 ZIP。GitHub Actions 也可在 Windows Runner 上驗證並產生 artifact。
+Windows 下載標記可能讓 .NET 拒絕載入解壓出的組件；新版改用單一 EXE，由 PyInstaller 在啟動時解開自身相依檔。沒有修改全機安全設定，也沒有自動移除下載標記。下載標記啟動回歸測試見 `scripts/test_windows_download.ps1`；DLL 對照診斷見 `scripts/probe_windows_dll_zone.py`。參考 [Microsoft .NET 載入說明](https://learn.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/runtime/loadfromremotesources-element)及 [PyInstaller 單檔模式](https://pyinstaller.org/en/stable/operating-mode.html#how-the-one-file-program-works)。
 
 ## 基本操作
 
@@ -305,7 +269,6 @@ ai-prompt-studio/
 
 若首次載入模組中斷，App 僅在編輯器尚未建立時自動重載一次；仍失敗則顯示原因與「重新載入」按鈕，不會無限重試或只留空白。手動重新載入前會確認，尚未儲存的編輯不保留；若持續失敗，請重新解壓完整安裝包，不要只移動執行檔。
 
-打包會保留 Python 執行環境所需的額外 TLS 憑證政策檔（若存在），並以 `--self-test` 檢查 TLS 憑證驗證與 tokenizer。Windows 打包或自我測試失敗時會停止，不產出誤稱成功的新壓縮包。
 
 在設定啟用自己的 Gemini Key 後，點擊項目內容右上角「AI 優化」，選擇改善目標，選填使用對象與必須保留的條件，確認才送出。僅傳送目前標題、標籤、項目標題、項目內容與回答，不傳送其他章節或專案路徑。畫面顯示修改前後內容與逐行差異；「套用至目前項目」只更新該項目，仍須另行儲存範本或草稿。取消、失敗或等待期間內容變更，都不會自動覆寫原文。這是輔助改寫，不保證 AI 完全正確，請人工核對。
 
@@ -394,13 +357,11 @@ docker run --detach --restart unless-stopped --name prompt-studio-oauth \
 
 ## 測試
 
-2026-11-02 下載版：macOS 186 項測試與打包自檢通過；Windows 已通過 [GitHub Windows Runner 測試、打包及套件自檢](https://github.com/61310118george/ai-prompt-studio/actions/runs/41446666250)。Runner 為 Windows Server 2022，不等同 Windows 11 桌面實機驗收。已修正 SQLite 連線未及時關閉造成的檔案鎖定，並調整 Windows 測試的 UTF-8、換行及權限判斷。
+2026-11-03 下載版：macOS 187 項測試、完整桌面流程、套件自檢、原生視窗及文件 tab 均通過。Windows 已通過 [GitHub Windows Runner 測試與下載後原生視窗驗證](https://github.com/61310118george/ai-prompt-studio/actions/runs/41452287116)：先重現舊版 DLL 錯誤，再確認新版單一 EXE 在保留網路下載標記時，仍可開啟原生視窗並載入文件 tab。Runner 為 Windows Server 2022，仍需在 Windows 11 實機確認最終操作體驗。
 
-更新或打包前請先儲存草稿並完全結束 App。macOS 與 Windows 打包腳本會檢查是否仍在執行，避免覆蓋舊程序正在使用的模組。若看到 `Error -3 while decompressing data: incorrect header check`，請完全結束後重開；若仍出現，重新解壓完整安裝包。打包自我測試會離線執行三種文件的 AI 輔助撰寫與修正問答，確認壓縮模組可載入，不讀取使用者金鑰或連線 Gemini。
+更新前請先儲存並完全結束 App。若看到 `Error -3 while decompressing data: incorrect header check`，請完全結束後重開；若仍出現，重新下載並解壓最新版。自動化 AI 測試使用替身回應，不讀取使用者金鑰，也不呼叫 Gemini。
 
-2026-11-01 本次驗證：186 項 Python 測試通過；macOS 原生 WebKit 測試涵蓋四類入口、兩層單選標籤、三維度需求表單、三文件流程、AI 理解問答、結果自動捲動、按鈕間距、全部 App 彈窗外側點擊關閉與拖曳保護、欄位修正與全表單輔助、手動套用、專案草稿恢復與資料夾輸出。AI 使用替身回應，未呼叫真實 Gemini。另驗證模組缺失時的錯誤畫面與有限重試。啟動模組改為依序載入以降低冷啟動連線突增；這是對偶發 WebKit 載入失敗的緩解，仍應持續觀察。
-
-Windows 11 本次完成靜態相容性檢查及跨平台檔名測試，尚未在 Windows 實機執行。新增功能使用 pywebview 原生選擇器、UTF-8、相對路徑與 PyYAML，無 macOS 專屬依賴；Windows 需重新執行打包腳本才會包含新版功能。
+AI 測試使用替身回應，不讀取使用者金鑰，也不呼叫 Gemini。Windows 11 桌面實機操作仍需另行驗收；一般使用者請直接下載最新版程式包。
 
 macOS：
 
