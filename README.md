@@ -10,7 +10,7 @@ AI Prompt Studio Next 是本機優先的提示詞與 AI 專案文件管理桌面
 ## 直接下載使用（不需要 Git 或 Python）
 
 1. 按本頁綠色 **Code → Local → Download ZIP**，或[直接下載完整 ZIP](https://github.com/61310118george/ai-prompt-studio/archive/refs/heads/main.zip)。
-2. 完整解壓縮，先閱讀根目錄的 **先看這裡.txt**。
+2. 完整解壓縮，先閱讀根目錄的 **START-HERE.txt**（內容為繁體中文）。
 3. 打開 **download/**，再解壓縮符合自己系統的程式包：
 
 | 系統 | 下載包 | 開啟方式 |
@@ -181,7 +181,7 @@ SQLite 保存匯入模板、貼文文字、數據快照及社群 AI 優化紀錄
 ```text
 ai-prompt-studio/
 ├── download/                   # 一般使用者直接解壓使用的雙平台程式包與來源紀錄
-├── 先看這裡.txt                  # 不使用指令的下載與開啟說明
+├── START-HERE.txt               # 不使用指令的繁體中文下載與開啟說明
 ├── .github/workflows/          # GitHub Actions 與 Windows 自動建置
 ├── oauth-service/              # 社群登入授權後端、獨立依賴與 Docker 建置
 ├── resources/                  # Agent 規格與離線 tokenizer 資料
