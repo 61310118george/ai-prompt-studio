@@ -1,22 +1,22 @@
 {
   "version": "V1.0",
-  "built_on": "2026-11-03",
-  "source_commit": "393be684957cb617dbf74e0c73300decbc8c8630",
+  "built_on": "2026-11-07",
+  "source_commit": "c4beccf34c566f2f1ae3fe29413a21f3050ac578",
   "verification": {
-    "macOS": "187 tests, desktop smoke, package self-test, native window and document tabs passed on Apple Silicon",
-    "Windows": "Windows Server 2022 GitHub Runner tests, package self-test, internet-marked downloaded ZIP native window and document tabs passed; Windows 11 interactive UI still requires confirmation",
-    "windows_run": "https://github.com/61310118george/ai-prompt-studio/actions/runs/41452287116"
+    "macOS": "197 tests, developer access smoke, package self-test, native window and locked document tabs passed on Apple Silicon",
+    "Windows": "Windows Server 2022 GitHub Runner tests, package self-test and native window smoke passed; Windows 11 interactive UI still requires confirmation",
+    "windows_run": "https://github.com/61310118george/ai-prompt-studio/actions/runs/42262949815"
   },
   "packages": [
     {
       "file": "AI-Prompt-Studio-V1.0-Windows-x64.zip",
-      "sha256": "0b842fdabab6cc7af8b528083284fe1a41797c1231a983cb04a5613422b94785",
-      "bytes": 18674969
+      "sha256": "28b674c252125e68a6117637a7b159e1ee79a9fcd4a8c24ca86e15c04b2d95e2",
+      "bytes": 18681582
     },
     {
       "file": "AI-Prompt-Studio-V1.0-macOS-Apple-Silicon.zip",
-      "sha256": "3f2a09032b37392fdad1bf10533feb000c27a1cfe253f7707cd29d91ba8d2100",
-      "bytes": 24675155
+      "sha256": "1363fe6179013ab35029fae16524c9f60823f1b2903c6dfd201beead7cf3ad33",
+      "bytes": 24683432
     }
   ]
 }
