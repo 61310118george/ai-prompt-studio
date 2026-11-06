@@ -1,9 +1,10 @@
 import { DOCUMENT_TYPES, fieldsFor, profileNote, profileKey, TOPICS, topicContext, compileDocument } from './document-catalog.js';
 import { mountDocumentAi } from './document-ai.js';
+import { isDeveloper } from './developer-mode.js';
 
 export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, setContent, onTags, onChange}) {
   const host=root.querySelector('#documentBuilder');
-  host.innerHTML=`<fieldset class="document-type-tabs" aria-label="文件類型">${Object.entries(DOCUMENT_TYPES).map(([key,label])=>`<label><input type="radio" name="documentType" value="${key}" id="documentType-${key}"><span>${label}</span></label>`).join('')}</fieldset>
+  host.innerHTML=`<fieldset id="documentTypeTabs" class="document-type-tabs" aria-label="文件類型"></fieldset>
     <p id="documentPurpose" class="document-purpose" hidden></p>
     <div id="documentFormArea" hidden><fieldset class="prompt-tag-field"><legend>標籤（各選一項，非必填）</legend><div id="documentTopics" class="prompt-tag-options"></div><div id="promptTagOptions" class="prompt-tag-options document-subtopics"></div></fieldset>
     <button type="button" class="button secondary document-write-button" id="documentAiWrite" disabled>AI 輔助撰寫</button><p id="documentAiMessage" role="status"></p>
@@ -16,6 +17,7 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
   $('documentFormArea').prepend(root.querySelector('#promptCategory').closest('label'));
   const empty=()=>({schemaVersion:2,mode:'',active:'core',major:'',minors:[],documents:{},topicDrafts:{},skillName:'project-workflow'});
   let data=empty(), revision=0, catalog=[], aiBusy=false;
+  const allowedTypes=()=>Object.entries(DOCUMENT_TYPES).filter(([key])=>key!=='mcp'||isDeveloper());
   const active=()=>data.mode==='project'?data.active:data.mode;
   const doc=()=>data.documents[active()]||(data.documents[active()]={fields:{},content:''});
   const stash=()=>{if(active())doc().content=getContent();};
@@ -23,7 +25,7 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
   const assertSynced=(key)=>{
     const item=data.documents[key];
     if(item&&Object.values(item.fields).some(value=>value.trim())&&item.builtFields!==JSON.stringify([getTitle(),item.fields,tags(),key==='skill'?data.skillName:'']))
-      throw Error(`「${DOCUMENT_TYPES[key]}」表單已變更，請先按「建立提示詞」更新預覽，再輸出。`);
+      throw Error(`「${DOCUMENT_TYPES[key]}」表單已變更，請先更新預覽，再輸出。`);
   };
   const tags=()=>data.major?[data.major,...data.minors.map(minor=>`${data.major}/${minor}`)].join(','):'';
   const gate=()=>{
@@ -93,17 +95,30 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
   }
   function switchStage(next){stash();data.active=next;setContent(doc().content);renderFields();renderSteps();notify();}
   function build(){
-    if(!data.mode||!getTitle().trim())throw Error('請填寫標題並選擇文件類型。');
+    if(data.mode==='mcp'&&!isDeveloper())throw Error('此功能僅限開發人員，請先解鎖開發人員模式。');
+    if(!data.mode||!getTitle().trim())throw Error('請填寫標題並選擇建立類型。');
     const next=compileDocument(active(),getTitle(),doc().fields,tags(),data.skillName);
     if(getContent().trim()&&getContent()!==next&&!window.confirm('用表單內容更新目前文件的 Markdown 預覽？其他文件不會變更。'))return false;
     // User-imported CSV templates are opt-in additions for the selected, qualified topic.
-    const additions=catalog.filter(item=>data.minors.some(minor=>item.tag===`${data.major}/${minor}`));
+    const additions=active()==='mcp'?[]:catalog.filter(item=>data.minors.some(minor=>item.tag===`${data.major}/${minor}`));
     const extra=additions.map(item=>[item.role,item.task,item.requirements,item.output,item.acceptance].filter(Boolean).join('\n')).join('\n\n');
     setContent(next+(extra?`\n## 自訂模板補充\n\n${extra}\n`:''));stash();doc().builtFields=signature();renderSteps();notify();return true;
   }
-  host.querySelectorAll('[name="documentType"]').forEach(input=>input.onchange=()=>{
-    stash();data.mode=input.value;if(data.mode==='project')data.active='core';
-    setContent(doc().content);renderFields();renderSteps();gate();notify();
+  function renderTypeTabs(){
+    $('documentTypeTabs').innerHTML=allowedTypes().map(([key,label])=>`<label><input type="radio" name="documentType" value="${key}" id="documentType-${key}"><span>${label}</span></label>`).join('');
+    host.querySelectorAll('[name="documentType"]').forEach(input=>{
+      input.checked=input.value===data.mode;
+      input.onchange=()=>{
+        stash();data.mode=input.value;if(data.mode==='project')data.active='core';
+        setContent(doc().content);renderFields();renderSteps();gate();notify();
+      };
+    });
+  }
+  document.addEventListener('developer-mode-changed',event=>{
+    if(!event.detail?.enabled&&data.mode==='mcp'){
+      stash();data.mode='';data.active='core';setContent('');onTags('');renderFields();renderSteps();notify();
+    }
+    renderTypeTabs();gate();
   });
   $('documentPrevious').onclick=()=>switchStage(stages[Math.max(0,stages.indexOf(active())-1)]);
   $('documentNext').onclick=()=>{
@@ -117,9 +132,9 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
     }catch(error){root.querySelector('#documentBuilderError').textContent=error.message;}
   };
   const error=document.createElement('p');error.id='documentBuilderError';error.setAttribute('role','alert');host.append(error);
-  renderTags();gate();
+  renderTypeTabs();renderTags();gate();
   return {
-    build, gate, tags, active, assertSynced:()=>assertSynced(active()), isProject:()=>data.mode==='project', ready:()=>Boolean(data.mode&&getTitle().trim()),
+    build, gate, tags, active, assertSynced:()=>assertSynced(active()), isProject:()=>data.mode==='project', isMcp:()=>isDeveloper()&&data.mode==='mcp', ready:()=>Boolean(data.mode&&getTitle().trim()),
     setCatalog:items=>{catalog=items;},
     snapshot:()=>{stash();return structuredClone(data);},
     restore:(value,legacy=false)=>{
@@ -127,7 +142,7 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
       data=value?.mode?structuredClone(value):empty();
       data.documents ||= {};data.topicDrafts ||= {};data.schemaVersion=2;
       if(!value?.mode&&legacy){data.mode='memory';data.documents.memory={fields:{},content:getContent()};}
-      if(!DOCUMENT_TYPES[data.mode])data.mode='';
+      if(!DOCUMENT_TYPES[data.mode]||(data.mode==='mcp'&&!isDeveloper()))data.mode='';
       if(!stages.includes(data.active))data.active='core';
       if(!TOPICS[data.major])data.major='';
       const previousTags=[data.major,...(data.minors||[]).map(minor=>`${data.major}/${minor}`)].filter(Boolean).join(',');
@@ -138,5 +153,6 @@ export function mountDocumentBuilder({root, bridge, esc, getTitle, getContent, s
       revision++;renderTags();renderFields();renderSteps();gate();
     },
     documents:()=>{stash();stages.forEach(assertSynced);return Object.fromEntries(stages.map(key=>[key,data.documents[key]?.content||'']));},
+    mcpProject:()=>{if(!isDeveloper())throw Error('此功能僅限開發人員，請先解鎖開發人員模式。');stash();assertSynced('mcp');return {title:getTitle(),tags:tags(),fields:structuredClone(data.documents.mcp?.fields||{}),content:data.documents.mcp?.content||''};},
   };
 }

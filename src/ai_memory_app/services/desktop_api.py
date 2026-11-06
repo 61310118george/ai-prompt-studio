@@ -25,7 +25,7 @@ from .cloud_advisor import CloudAdvisor
 from .csv_import import CsvImport
 from .social_data import SocialData
 from .developer_mode import DeveloperMode
-from .document_project import project_files, write_project, skill_name
+from .document_project import project_files, mcp_project_files, write_project, skill_name
 from ..data.database import connect, utc_now
 
 LOCAL_PROMPT_SCOPE = "__local_prompt_library__"
@@ -75,6 +75,21 @@ class DesktopApi:
             self._developer.require(generation)
             return result
         return self._safe_call(guarded)
+
+    @staticmethod
+    def _uses_mcp(value):
+        if not isinstance(value, dict):
+            return False
+        state = value.get('document_state', value)
+        if isinstance(state, str):
+            try:
+                state = json.loads(state)
+            except (TypeError, ValueError):
+                return False
+        return isinstance(state, dict) and state.get('mode') == 'mcp'
+
+    def _developer_enabled(self):
+        return self._developer.status()['enabled']
 
     def get_prompt_tag_catalog(self):
         return self._safe_call(self._csv_import.catalog)
@@ -199,13 +214,16 @@ class DesktopApi:
         return self._safe_call(lambda: self._cloud_advisor.optimize_section(request))
 
     def draft_document_field(self, request):
-        return self._safe_call(lambda: self._cloud_advisor.draft_document_field(request))
+        call = lambda: self._cloud_advisor.draft_document_field(request)
+        return self._developer_call(call) if request.get('document_type') == 'mcp' else self._safe_call(call)
 
     def clarify_document(self, request):
-        return self._safe_call(lambda: self._cloud_advisor.clarify_document(request))
+        call = lambda: self._cloud_advisor.clarify_document(request)
+        return self._developer_call(call) if request.get('document_type') == 'mcp' else self._safe_call(call)
 
     def compose_document(self, request):
-        return self._safe_call(lambda: self._cloud_advisor.compose_document(request))
+        call = lambda: self._cloud_advisor.compose_document(request)
+        return self._developer_call(call) if request.get('document_type') == 'mcp' else self._safe_call(call)
 
     def attach_window(self, window) -> None:
         self._window = window
@@ -370,6 +388,25 @@ class DesktopApi:
             return write_project(parent, safe_export_filename(str(title)), files)
         return self._safe_call(choose)
 
+    def preview_mcp_project(self, project):
+        return self._developer_call(lambda: mcp_project_files(project))
+
+    def export_mcp_project(self, project):
+        def choose():
+            files = mcp_project_files(project)
+            if self._window is None:
+                raise ValueError('請在桌面 App 選擇輸出資料夾。')
+            import webview
+            selected = self._window.create_file_dialog(webview.FOLDER_DIALOG)
+            if not selected:
+                return None
+            raw = selected[0] if isinstance(selected, (tuple, list)) else selected
+            parent = Path(str(raw)).expanduser().resolve(strict=True)
+            if not parent.is_dir():
+                raise ValueError('請選擇有效資料夾。')
+            return write_project(parent, safe_export_filename(str(project.get('title', 'MCP Server'))), files)
+        return self._developer_call(choose)
+
     def set_project_root(self, root: str) -> dict:
         return self._safe_call(lambda: str(self._authorize_root(root)))
 
@@ -405,19 +442,32 @@ class DesktopApi:
         return self._response(load_agent_catalog())
 
     def list_prompts(self, project_path: str, query: str = "", category: str = "", archived: bool = False) -> dict:
-        return self._safe_call(lambda: self.prompts.list(self._prompt_scope(project_path), query, category, archived))
+        def load():
+            items = self.prompts.list(self._prompt_scope(project_path), query, category, archived)
+            return items if self._developer_enabled() else [item for item in items if not self._uses_mcp(item)]
+        return self._safe_call(load)
 
     def save_prompt(self, request: dict) -> dict:
-        return self._safe_call(lambda: self.prompts.save(self._prompt_scope(request["project_path"]), request))
+        call = lambda: self.prompts.save(self._prompt_scope(request["project_path"]), request)
+        return self._developer_call(call) if self._uses_mcp(request) else self._safe_call(call)
 
     def load_prompt_draft(self, project_path: str) -> dict:
-        return self._safe_call(lambda: self.prompts.load_draft(self._prompt_scope(project_path)))
+        def load():
+            draft = self.prompts.load_draft(self._prompt_scope(project_path))
+            return None if draft and self._uses_mcp(draft) and not self._developer_enabled() else draft
+        return self._safe_call(load)
 
     def save_prompt_draft(self, request: dict) -> dict:
-        return self._safe_call(lambda: self.prompts.save_draft(self._prompt_scope(request["project_path"]), request))
+        call = lambda: self.prompts.save_draft(self._prompt_scope(request["project_path"]), request)
+        return self._developer_call(call) if self._uses_mcp(request) else self._safe_call(call)
 
     def list_prompt_versions(self, project_path: str, prompt_id: int) -> dict:
-        return self._safe_call(lambda: self.prompts.history(self._prompt_scope(project_path), prompt_id))
+        def load():
+            items = self.prompts.history(self._prompt_scope(project_path), prompt_id)
+            if not self._developer_enabled() and any(self._uses_mcp(item) for item in items):
+                raise ValueError('此功能僅限開發人員，請先解鎖開發人員模式。')
+            return items
+        return self._safe_call(load)
 
     def list_prompt_groups(self, project_path: str) -> dict:
         return self._safe_call(lambda: self.prompts.groups(self._prompt_scope(project_path)))

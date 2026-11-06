@@ -29,7 +29,7 @@ export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, rep
         <label>群組（若要加入提示詞範本庫請選擇）<select id="promptCategory"><option value="">（不選擇）</option></select></label>
         <div class="prompt-builder-action"><button class="button secondary" id="promptBuild" type="button" disabled>建立提示詞</button><span id="promptBuildHint">請先輸入標題，或匯入本機 Markdown。</span></div>
         <section class="prompt-structure-panel" id="promptStructurePanel" hidden aria-labelledby="promptStructureTitle"><div class="prompt-structure-heading"><strong id="promptStructureTitle">Markdown 項目</strong><span id="promptStructureCount"></span></div><div class="prompt-structure-grid"><label>選擇項目<select id="promptSectionSelect"></select></label><label>標題層級<select id="promptSectionLevel"><option value="1">H1</option><option value="2">H2</option><option value="3">H3</option><option value="4">H4</option><option value="5">H5</option><option value="6">H6</option></select></label><label class="wide">項目標題<input id="promptSectionTitle" maxlength="120"></label><label class="wide">項目內容<textarea id="promptSectionBody" rows="7"></textarea></label></div><button class="button secondary compact-button" id="promptSectionApply" type="button">套用此項目</button></section>
-        <div class="prompt-content-heading"><label for="promptContent">預覽提示詞</label></div><pre id="promptContent" class="prompt-editor markdown-prompt-editor is-empty" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="預覽提示詞" data-placeholder="可直接輸入 Markdown，或先建立／匯入提示詞。" spellcheck="false"></pre>
+        <div class="prompt-content-heading"><label for="promptContent" id="promptContentLabel">預覽提示詞</label></div><pre id="promptContent" class="prompt-editor markdown-prompt-editor is-empty" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="預覽提示詞" data-placeholder="可直接輸入 Markdown，或先建立／匯入提示詞。" spellcheck="false"></pre>
         <div class="inline-actions prompt-actions"><button class="button primary" id="promptSave">儲存範本</button><button class="button secondary" id="promptClear">清除</button><button class="button secondary" id="promptSaveDraft">儲存草稿</button><button class="button secondary" id="promptExport">輸出提示詞</button></div>
       </div></div></section>
   </div>`;
@@ -62,9 +62,12 @@ export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, rep
   mountCsvImport({root,bridge,scope:libraryProject,esc,toast,refreshed:async()=>{await refreshCatalog();await reload();}});
   const updateBuilderAction = () => {
     builder?.gate();
-    $('promptBuild').textContent=importedPrompt?'修正提示詞':'建立提示詞';
+    const mcp=builder?.isMcp();
+    $('promptBuild').textContent=importedPrompt?'修正提示詞':mcp?'建立 MCP 藍圖':'建立提示詞';
     $('promptBuild').disabled=!builder?.ready();
-    $('promptExport').textContent=builder?.isProject()?'輸出專案資料夾':'輸出提示詞';
+    $('promptExport').textContent=builder?.isProject()?'輸出專案資料夾':mcp?'輸出 MCP 專案':'輸出提示詞';
+    $('promptContentLabel').textContent=mcp?'預覽 MCP 規格':'預覽提示詞';
+    $('promptContent').setAttribute('aria-label',mcp?'預覽 MCP 規格':'預覽提示詞');
     $('promptBuildHint').textContent='';
   };
   const renderTagOptions = () => builder?.setCatalog(tagCatalog);
@@ -316,7 +319,7 @@ export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, rep
     const file=response(await bridge.call('import_prompt_file'));if(!file)return;
     await select(null);$('promptTitle').value=String(file.name||'匯入提示詞').slice(0,20);$('promptContent').value=file.content;
     const filename=String(file.filename||file.name).toLowerCase();
-    const mode=filename==='agents.md'?'core':filename==='skill.md'?'skill':'memory';
+    const mode=filename==='agents.md'?'core':filename==='skill.md'?'skill':filename==='mcp-plan.md'&&isDeveloper()?'mcp':'memory';
     builder.restore({mode,active:mode,major:'',minors:[],documents:{[mode]:{fields:{},content:file.content}}});
     importedPrompt=true;updateBuilderAction();dirty();$('promptBuild').focus();toast(`已匯入 ${file.filename||file.name}；點擊「修正提示詞」可依 Markdown 項目編輯。`);
   }));
@@ -329,6 +332,14 @@ export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, rep
       if(result)toast(`已輸出專案：${result.path}`);
       return;
     }
+    if(builder.isMcp()){
+      const project=builder.mcpProject();
+      const files=response(await bridge.call('preview_mcp_project',project));
+      if(!window.confirm(`將輸出 MCP Server 起始專案：\n\n${Object.keys(files).join('\n')}\n\nserver.py 可直接啟動，但第三方 API 與實際業務邏輯仍須依藍圖完成。接著請選擇存放位置。`))return;
+      const result=response(await bridge.call('export_mcp_project',project));
+      if(result)toast(`已輸出 MCP 專案：${result.path}`);
+      return;
+    }
     const content=$('promptContent').value;if(!content.trim())throw Error('提示詞內容為空白，無法匯出。');
     builder.assertSynced();
     const file=response(await bridge.call('export_document_file',builder.active(),content));if(!file)return;
@@ -336,7 +347,7 @@ export async function mountPromptWorkspace({ bridge, state, escapeHtml: esc, rep
   }));
   $('promptBuild').addEventListener('click',run(async()=>{
     if(importedPrompt){const count=openStructureEditor();toast(`已辨識 ${count} 個 Markdown 項目，可從下拉選單逐項修正。`);return;}
-    if(builder.build()){const count=openStructureEditor();dirty();toast(`已建立文件與 ${count} 個 Markdown 項目。`);}
+    if(builder.build()){const count=openStructureEditor();dirty();toast(builder.isMcp()?`已建立 MCP 規格與 ${count} 個 Markdown 項目。`:`已建立文件與 ${count} 個 Markdown 項目。`);}
   }));
   mountSectionOptimization({root, bridge, snapshot:()=>({
     title:$('promptTitle').value, tags:draftTags, section_title:$('promptSectionTitle').value,

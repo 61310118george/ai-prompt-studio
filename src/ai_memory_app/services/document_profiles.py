@@ -13,7 +13,10 @@ def load_document_profiles():
 
 
 def profile_fields(kind, major='', minor=''):
-    profiles = load_document_profiles()['profiles']
+    catalog = load_document_profiles()
+    if kind == 'mcp':
+        return catalog['mcp']
+    profiles = catalog['profiles']
     key = f'{major}/{minor}' if minor else major
     if key not in profiles or kind not in profiles[key]:
         raise ValueError('文件分類不正確，請重新選擇標籤。')

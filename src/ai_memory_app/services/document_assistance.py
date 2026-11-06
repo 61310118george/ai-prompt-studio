@@ -5,6 +5,7 @@ LEGACY_FIELDS = {
     'core': {'purpose': '專案目標與範圍', 'rules': '固定規則與禁止事項', 'workflow': '協作與確認流程', 'verification': '完成與驗收方式'},
     'memory': {'background': '背景與已確認事實', 'audience': '使用對象與需求', 'preferences': '語氣與工作偏好', 'decisions': '既有決策與待確認事項'},
     'skill': {'trigger': '用途與使用時機', 'inputs': '需要提供的資料', 'steps': '執行步驟', 'output': '輸出格式與驗收'},
+    'mcp': {},
 }
 
 

@@ -29,7 +29,7 @@ def check_document_ai() -> int:
 
     advisor._open = reply  # No network, user credentials, database, or paid requests.
     checked = 0
-    for kind in ('core', 'memory', 'skill'):
+    for kind in ('core', 'memory', 'skill', 'mcp'):
         fields = {item['id']: item['label'] for item in profile_fields(kind, '開發程式', '寫網頁')}
         for mode in ('write', 'revise'):
             field = next(iter(fields))

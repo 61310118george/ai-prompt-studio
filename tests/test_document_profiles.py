@@ -12,6 +12,10 @@ from ai_memory_app.services.document_project import validate_document_state
 
 def test_catalog_covers_all_topics_and_document_specific_sections():
     catalog = load_document_profiles()
+    assert {field['id'] for field in catalog['mcp']} == {
+        'purpose', 'host', 'tools', 'resources', 'prompts', 'connection',
+        'dependencies', 'security', 'verification'}
+    assert profile_fields('mcp') == catalog['mcp']
     assert len(catalog['profiles']) == 13
     for key, variants in catalog['profiles'].items():
         assert set(variants) == {'core', 'memory', 'skill'}
@@ -75,6 +79,10 @@ for(const [key,types] of Object.entries(data.profiles)){
 }
 const partial=compileDocument('core','未完成',{role:'工程師'},'');
 assert.ok(partial.includes('[待確認]'));
+const mcp=compileDocument('mcp','社群資料 MCP',{purpose:'讀取成效',tools:'查詢貼文',connection:'本機 stdio',security:'禁止個資',verification:'Inspector 測試'},'推廣行銷,推廣行銷/分析市場');
+assert.ok(mcp.includes('MCP Server 的實作藍圖'));
+assert.ok(mcp.includes('## Tools（AI 可執行的動作）'));
+assert.ok(mcp.includes('### 可執行的動作\n\n查詢貼文'));
 assert.throws(()=>compileDocument('skill','未完成',{task:'執行'},''));
 const old=compileDocument('core','舊稿',{purpose:'舊版不可遺失內容',role:'工程師'},'');
 assert.ok(old.includes('舊版不可遺失內容'));

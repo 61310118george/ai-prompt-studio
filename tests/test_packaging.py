@@ -16,7 +16,7 @@ def test_packaged_ai_check_is_offline(monkeypatch):
 
     monkeypatch.setattr('urllib.request.OpenerDirector.open', forbid)
     monkeypatch.setattr('ai_memory_app.services.credential_store.LocalCredentialStore.load', forbid)
-    assert check_document_ai() == 6
+    assert check_document_ai() == 8
 
 
 def test_corrupt_module_returns_restart_guidance():

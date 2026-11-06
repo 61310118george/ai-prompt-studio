@@ -1,4 +1,4 @@
-export const DOCUMENT_TYPES = {core:'核心文件', memory:'AI 記憶', skill:'技能 Skill', project:'專案'};
+export const DOCUMENT_TYPES = {core:'核心文件', memory:'AI 記憶', skill:'技能 Skill', project:'專案', mcp:'MCP'};
 export const TOPICS = {
   '開發程式':['寫網頁','開發遊戲','開發 app'],
   '撰寫企劃':['撰寫文案','專案企劃'],
@@ -40,12 +40,13 @@ export const LEGACY_FIELDS = {
 
 let catalog=null;
 export function configureDocumentProfiles(value) {
-  if(value?.version!==2||!value.profiles?.['']?.core)throw Error('文件題庫格式不正確');
+  if(value?.version!==2||!value.profiles?.['']?.core||!Array.isArray(value.mcp))throw Error('文件題庫格式不正確');
   catalog=value;
 }
 export function profileKey(major='', minors=[]) { return minors[0]?`${major}/${minors[0]}`:major; }
 export function documentProfile(type,major='',minors=[]) {
   if(!catalog)throw Error('文件題庫尚未載入');
+  if(type==='mcp')return catalog.mcp;
   const fields=catalog.profiles[profileKey(major,minors)]?.[type];
   if(!fields)throw Error('找不到對應文件分類');
   return fields;
@@ -79,5 +80,8 @@ export function compileDocument(type, title, fields, tags, skillName='project-wo
     sections.get(field.section).push(`### ${field.label}\n\n${text}`);
   }
   const body=[...sections].map(([heading,items])=>`## ${heading}\n\n${items.join('\n\n')}`).join('\n\n');
-  return `${prefix}# ${title.trim()}\n\n${tags?`用途：${tags}\n\n`:''}${body}\n`;
+  const introduction=type==='mcp'
+    ? '此文件是 MCP Server 的實作藍圖。MCP 負責連接 AI 與外部資料／功能，不會取代提示詞；輸出專案中的 server.py 是可執行起點，第三方服務邏輯仍須依此藍圖實作與測試。\n\n'
+    : '';
+  return `${prefix}# ${title.trim()}\n\n${introduction}${tags?`用途：${tags}\n\n`:''}${body}\n`;
 }

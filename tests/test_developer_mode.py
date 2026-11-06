@@ -18,6 +18,16 @@ def setup(api):
     assert api.unlock_developer_mode('5830485')['data']['enabled']
 
 
+def mcp_state():
+    return {'mode': 'mcp', 'active': 'mcp', 'documents': {'mcp': {'fields': {}, 'content': '# MCP'}}}
+
+
+def mcp_project():
+    return {'title': 'MCP', 'content': '# MCP', 'fields': {
+        'purpose': 'test', 'tools': 'test', 'connection': 'stdio',
+        'security': 'confirm', 'verification': 'inspect'}}
+
+
 def test_fixed_password_restart_and_lock(api):
     assert api.get_developer_status()['data'] == dict(enabled=False, retry_after=0)
     assert not hasattr(api, 'setup_developer_password')
@@ -50,6 +60,13 @@ def test_fixed_password_restart_and_lock(api):
     ('run_memory_health_check', ('/not-authorized', 'codex')),
     ('analyze_with_ai', ({'content': 'test', 'consent': True},)),
     ('optimize_with_ai', ({'content': 'test', 'consent': True},)),
+    ('preview_mcp_project', (mcp_project(),)),
+    ('export_mcp_project', (mcp_project(),)),
+    ('clarify_document', ({'document_type': 'mcp'},)),
+    ('compose_document', ({'document_type': 'mcp'},)),
+    ('draft_document_field', ({'document_type': 'mcp'},)),
+    ('save_prompt_draft', ({'project_path': LOCAL_PROMPT_SCOPE, 'document_state': mcp_state()},)),
+    ('save_prompt', ({'project_path': LOCAL_PROMPT_SCOPE, 'document_state': mcp_state()},)),
 ])
 def test_backend_blocks_locked_features(api, method, args):
     for configured in (False, True):
@@ -79,3 +96,18 @@ def test_locked_inflight_result_is_discarded(api):
     result = api._developer_call(result_after_lock)
     assert not result['ok']
     assert 'private' not in str(result)
+
+
+def test_mcp_saved_content_is_hidden_again_after_lock(api):
+    setup(api)
+    request = {'project_path': LOCAL_PROMPT_SCOPE, 'title': 'MCP 私有草稿', 'category': '一般',
+               'tags': '', 'content': '# MCP', 'tool': 'codex', 'document_state': mcp_state()}
+    saved = api.save_prompt(request)['data']
+    assert api.save_prompt_draft(request)['ok']
+    assert any(item['id'] == saved['id'] for item in api.list_prompts(LOCAL_PROMPT_SCOPE)['data'])
+    assert api.load_prompt_draft(LOCAL_PROMPT_SCOPE)['data']['document_state']['mode'] == 'mcp'
+    api.lock_developer_mode()
+    assert all(item['id'] != saved['id'] for item in api.list_prompts(LOCAL_PROMPT_SCOPE)['data'])
+    assert api.load_prompt_draft(LOCAL_PROMPT_SCOPE)['data'] is None
+    versions = api.list_prompt_versions(LOCAL_PROMPT_SCOPE, saved['id'])
+    assert not versions['ok'] and '開發人員' in versions['error']

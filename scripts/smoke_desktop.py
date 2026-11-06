@@ -186,6 +186,7 @@ def main():
                     await waitFor(()=>document.getElementById('developerForm'));
                     await waitFor(()=>document.getElementById('startupStatus').hidden);
                     if(document.querySelectorAll('#navList .nav-button').length!==3)throw Error('Default navigation should contain three entries');
+                    if(document.getElementById('documentType-mcp')||document.querySelectorAll('[name="documentType"]').length!==4)throw Error('MCP entry exposed before unlock');
                     if(!document.querySelector('.usage-guide').hidden)throw Error('Whole-prompt AI exposed before unlock');
                     if(!document.querySelector('.workspace-tabs').hidden||!document.querySelector('.social-settings').hidden)throw Error('Developer features exposed before unlock');
                     if((await window.pywebview.api.get_social_settings()).ok)throw Error('Backend social access should be blocked');
@@ -201,6 +202,7 @@ def main():
                     document.getElementById('developerVersionTrigger').click();
                     set('developerPassword','5830485');document.getElementById('developerSubmit').click();
                     await waitFor(()=>document.querySelector('#navList [data-page="health"]'));
+                    await waitFor(()=>document.getElementById('documentType-mcp'));
                     if(document.querySelector('.usage-guide').hidden)throw Error('Developer usage guide missing');
                     if(document.querySelector('.workspace-tabs').hidden||document.querySelector('.social-settings').hidden)throw Error('Developer features missing after unlock');
                     document.querySelector('[data-page="prompts"]').click();
@@ -224,6 +226,12 @@ def main():
                     if(document.querySelector('.prompt-content-heading label').textContent.trim()!=='預覽提示詞')throw Error('Prompt preview label is incorrect');
                     if(document.getElementById('promptContent').tagName!=='PRE'||document.getElementById('promptContent').contentEditable==='false')throw Error('Markdown preview should stay directly editable');
                     if(!document.getElementById('promptBuild').disabled||document.getElementById('promptBuild').textContent.trim()!=='建立提示詞')throw Error('Create prompt should start disabled');
+                    if(document.querySelectorAll('[name="documentType"]').length!==5||!document.getElementById('documentType-mcp'))throw Error('Developer MCP entry missing');
+                    document.getElementById('documentType-mcp').click();
+                    set('promptTitle','社群資料 MCP');
+                    if(document.querySelectorAll('[data-document-field]').length!==9||!document.getElementById('question-tools').textContent.includes('輸入什麼'))throw Error('MCP guided fields missing');
+                    if(document.getElementById('promptBuild').textContent.trim()!=='建立 MCP 藍圖'||document.getElementById('promptExport').textContent.trim()!=='輸出 MCP 專案'||document.getElementById('promptContentLabel').textContent.trim()!=='預覽 MCP 規格')throw Error('MCP actions or preview label incorrect');
+                    set('promptTitle','');
                     document.getElementById('documentType-memory').click();
                     if(document.getElementById('documentFormArea').hidden||!document.getElementById('documentFields').hidden)throw Error('Tags and title should appear before form');
                     document.querySelector('#documentTopics input[value="其他"]').click();
@@ -463,6 +471,8 @@ def main():
                     set('developerPassword','5830485');document.getElementById('developerSubmit').click();
                     await waitFor(()=>document.querySelector('#navList [data-page="health"]'));
                     document.getElementById('developerLock').click();await waitFor(()=>!document.querySelector('#navList [data-page="health"]'));
+                    if(document.getElementById('documentType-mcp'))throw Error('MCP entry remained visible after lock');
+                    if((await window.pywebview.api.preview_mcp_project({title:'MCP',content:'# MCP',fields:{purpose:'x',tools:'x',connection:'stdio',security:'x',verification:'x'}})).ok)throw Error('Locked MCP backend access allowed');
                     document.querySelector('[data-page="projects"]').click();document.getElementById('refreshProjectsButton').click();
                     await waitFor(()=>!document.getElementById('refreshProjectsButton').disabled);
                     if(document.getElementById('globalMessage').textContent||!document.querySelector('[data-preview-file="AGENTS.md"]'))throw Error('General-mode project scan failed');

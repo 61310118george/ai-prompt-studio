@@ -5,7 +5,7 @@ import pytest
 
 from ai_memory_app.data.database import initialize_database
 from ai_memory_app.data.prompt_library import PromptLibrary
-from ai_memory_app.services.document_project import project_files, skill_name, validate_document_state, write_project
+from ai_memory_app.services.document_project import mcp_project_files, project_files, skill_name, validate_document_state, write_project
 
 
 def documents(name='project-workflow'):
@@ -71,6 +71,33 @@ def test_document_state_roundtrip_and_migration(tmp_path):
     saved = library.save('local', request)
     assert json.loads(saved['document_state']) == state
     assert validate_document_state(saved['document_state']) == state
+
+
+def test_mcp_project_is_runnable_scaffold_and_cross_platform():
+    project = {
+        'title': '社群資料 MCP',
+        'content': '# 社群資料 MCP\n\n## Tools\n\n查詢貼文',
+        'fields': {
+            'purpose': '讀取成效資料', 'tools': '查詢貼文成效',
+            'connection': '本機 stdio', 'security': '禁止客戶個資',
+            'verification': '使用 Inspector 測試',
+        },
+    }
+    files = mcp_project_files(project)
+    assert set(files) == {'README.md', 'MCP-PLAN.md', 'server.py', 'pyproject.toml',
+                          '.env.example', 'client-config.example.json'}
+    assert 'from mcp.server import MCPServer' in files['server.py']
+    assert 'mcp.run(transport=transport)' in files['server.py']
+    assert 'MCP_REMOTE_SECURITY_REVIEWED' in files['server.py']
+    assert 'Windows 11' in files['README.md'] and 'macOS' in files['README.md']
+    compile(files['server.py'], 'server.py', 'exec')
+
+
+def test_mcp_project_requires_security_and_accepts_saved_state():
+    state = {'mode': 'mcp', 'active': 'mcp', 'documents': {'mcp': {'fields': {}, 'content': '# MCP'}}}
+    assert validate_document_state(state) == state
+    with pytest.raises(ValueError):
+        mcp_project_files({'title': 'MCP', 'content': '# MCP', 'fields': {'purpose': 'test'}})
 
 
 @pytest.mark.parametrize('state', [{'mode': []}, {'documents': {'unknown': {}}}, {'mode': 'project', 'documents': {'core': {'fields': {'a': 5}}}}])

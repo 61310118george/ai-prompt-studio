@@ -1,12 +1,105 @@
 {
   "version": 2,
-  "checked": "2026-11-01",
+  "checked": "2026-11-07",
   "notes": {
     "core": "核心文件用來告訴 AI 這個專案要做什麼、要遵守哪些規則，以及怎樣才算完成，讓之後的工作有一致的方向。",
     "memory": "AI 記憶用來整理專案背景、已做的決定和目前進度。之後把文件提供給 AI，就能更快接續工作，不用每次重新說明。",
     "skill": "技能 Skill 用來把經常重複的工作寫成一套做法，告訴 AI 何時使用、怎麼做，以及最後要交出什麼。",
-    "project": "專案會帶你依序建立核心文件、AI 記憶和技能 Skill，把工作規則、背景資料與操作步驟整理好，最後一起輸出成資料夾。"
+    "project": "專案會帶你依序建立核心文件、AI 記憶和技能 Skill，把工作規則、背景資料與操作步驟整理好，最後一起輸出成資料夾。",
+    "mcp": "MCP 用來讓 AI 連接外部資料與功能，不會取代提示詞。這裡會引導你規劃 Tool、Resource、Prompt、連線方式與安全邊界，最後輸出可執行的 Python MCP Server 起始專案。"
   },
+  "mcp": [
+    {
+      "id": "purpose",
+      "group": "用途與使用者",
+      "section": "Server 定位",
+      "label": "要解決的問題",
+      "question": "你希望 AI 透過這個 MCP 取得什麼資料或完成什麼工作？請用實際使用情境說明。",
+      "example": "讓 AI 讀取已授權的社群成效資料，協助分析貼文並提出改善方向。",
+      "required": true,
+      "maxLength": 20000
+    },
+    {
+      "id": "host",
+      "group": "用途與使用者",
+      "section": "Server 定位",
+      "label": "使用者與 AI 應用程式",
+      "question": "誰會使用這個 MCP？預計連接 Codex、Claude Code，還是其他支援 MCP 的 AI 應用程式？",
+      "example": "公司行銷人員；先供 Codex 與 Claude Code 在本機使用。",
+      "required": false,
+      "maxLength": 20000
+    },
+    {
+      "id": "tools",
+      "group": "MCP 能力",
+      "section": "Tools（AI 可執行的動作）",
+      "label": "可執行的動作",
+      "question": "AI 可以執行哪些動作？每個動作需要輸入什麼、會回傳什麼？會修改資料、發文或花費金錢的動作請特別標明。",
+      "example": "查詢指定日期的貼文成效；輸入日期區間，回傳貼文、觸及與互動數。",
+      "required": true,
+      "maxLength": 20000
+    },
+    {
+      "id": "resources",
+      "group": "MCP 能力",
+      "section": "Resources（AI 可讀取的資料）",
+      "label": "可讀取的資料",
+      "question": "有哪些資料只需要提供 AI 讀取？資料來自檔案、資料庫還是 API？哪些內容不能提供？沒有的話可填「無」。",
+      "example": "唯讀的服務項目、品牌用語與匿名化社群統計；不提供客戶個資。",
+      "required": false,
+      "maxLength": 20000
+    },
+    {
+      "id": "prompts",
+      "group": "MCP 能力",
+      "section": "Prompts（使用者主動選用的範本）",
+      "label": "可重用的工作範本",
+      "question": "是否需要讓使用者主動選擇固定工作流程？例如「分析本週貼文」或「產生下週內容方向」。沒有的話可填「無」。",
+      "example": "分析本週貼文：接收目標與日期區間，整理成效、問題與下週建議。",
+      "required": false,
+      "maxLength": 20000
+    },
+    {
+      "id": "connection",
+      "group": "連線與執行",
+      "section": "連線與執行方式",
+      "label": "執行位置與連線方式",
+      "question": "這個 MCP 只在自己的電腦使用，還是要讓多人從網路連線？不確定時建議先做本機 stdio，完成測試後再評估遠端 Streamable HTTP。",
+      "example": "第一版使用本機 stdio；不開放網路連線。",
+      "required": true,
+      "maxLength": 20000
+    },
+    {
+      "id": "dependencies",
+      "group": "連線與執行",
+      "section": "資料來源與相依服務",
+      "label": "外部服務與必要設定",
+      "question": "需要連接哪些 API、資料庫或本機檔案？請只寫服務名稱與需要的權限，不要貼上密碼、Token 或 API Key。",
+      "example": "Meta Graph API；只讀貼文與成效資料；憑證由環境變數提供。",
+      "required": false,
+      "maxLength": 20000
+    },
+    {
+      "id": "security",
+      "group": "安全與驗收",
+      "section": "權限與安全邊界",
+      "label": "授權、確認與禁止事項",
+      "question": "哪些操作一定要先讓使用者確認？哪些資料禁止讀取或傳送？不同使用者需要不同權限嗎？",
+      "example": "發文、刪除與付費操作必須二次確認；禁止讀取客戶個資；金鑰只放環境變數。",
+      "required": true,
+      "maxLength": 20000
+    },
+    {
+      "id": "verification",
+      "group": "安全與驗收",
+      "section": "測試與完成條件",
+      "label": "錯誤處理與驗收方式",
+      "question": "連線失敗、資料缺少或權限不足時要怎麼回應？你會用哪些測試確認 Tool、Resource 與 Prompt 可以安全使用？",
+      "example": "錯誤時回傳可理解的原因且不洩漏憑證；使用 MCP Inspector 測試清單、正常輸入、錯誤輸入與需確認操作。",
+      "required": true,
+      "maxLength": 20000
+    }
+  ],
   "profiles": {
     "開發程式/寫網頁": {
       "core": [
